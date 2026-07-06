@@ -1,34 +1,39 @@
 @import "tailwindcss";
 
-/* ── Void & Signal Red ───────────────────────────────────────── */
+/* ── Paper, Cobalt & Coral (light) ───────────────────────────── */
 :root {
-  --background: #060606;
-  --background-soft: #0d0d0d;
-  --foreground: #f2f0ea;
-  --muted: #87847c;
-  --border: #1f2230;
-  --accent: #2f6bff;
+  --background: #f6f4ee; /* warm paper */
+  --background-soft: #efece3; /* slightly deeper paper for bands */
+  --ink: #16150f; /* near-black text */
+  --foreground: #16150f;
+  --muted: #6b6a60; /* warm grey */
+  --border: #e0ddd2; /* hairline on paper */
+  --accent: #2b5cff; /* cobalt */
+  --accent-2: #ff5a4d; /* coral */
+  --map-bg: #0e1220; /* dark contrast band behind the map */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-background-soft: var(--background-soft);
   --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-map-bg: var(--map-bg);
+  --font-display: var(--font-display-custom);
   --font-sans: var(--font-sans-custom);
   --font-mono: var(--font-mono-custom);
 }
 
 html {
   background: var(--background);
-  scroll-snap-type: y proximity;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
-    scroll-snap-type: none;
     scroll-behavior: auto;
   }
 }
@@ -39,7 +44,12 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+}
+
+/* clip horizontal overflow without turning body into a scroll container
+   (that would break framer's useScroll) */
+html {
+  overflow-x: clip;
 }
 
 ::selection {
@@ -47,32 +57,40 @@ body {
   color: #ffffff;
 }
 
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-/* tight, editorial display type */
+/* editorial serif display */
 .display {
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 0.92;
-  text-transform: uppercase;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 .kicker {
   font-family: var(--font-mono), monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.28em;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-/* faint vertical hairlines backdrop */
-.bg-lines {
-  background-image: linear-gradient(
-    to right,
-    var(--border) 1px,
-    transparent 1px
-  );
-  background-size: 12.5vw 100%;
+/* map dot pulse (still used inside the dark map band) */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.85;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.pulse-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-ring 2.6s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring {
+    animation: none;
+  }
 }

@@ -1,35 +1,24 @@
 import ConsoleGreeting from "@/components/ConsoleGreeting";
-import SlideDeck from "@/components/story/SlideDeck";
-import Intro from "@/components/story/panels/Intro";
-import Startups from "@/components/story/panels/Startups";
-import Hackathons from "@/components/story/panels/Hackathons";
-import Built from "@/components/story/panels/Built";
-import Robotics from "@/components/story/panels/Robotics";
-import Contact from "@/components/story/panels/Contact";
-import { site } from "@/data/site";
+import FloatingShapes from "@/components/FloatingShapes";
+import Hero from "@/components/sections/Hero";
+import PlugAndPlay from "@/components/sections/PlugAndPlay";
+import Hackathons from "@/components/sections/Hackathons";
+import OtherProjects from "@/components/sections/OtherProjects";
+import Hardware from "@/components/sections/Hardware";
+import Contact from "@/components/sections/Contact";
 
 export default function Home() {
   return (
     <>
       <ConsoleGreeting />
-
-      {/* fixed minimal brand */}
-      <a
-        href={`mailto:${site.email}`}
-        className="kicker fixed left-4 top-4 z-40 hidden text-foreground transition-colors hover:text-accent sm:block"
-      >
-        Hire me →
-      </a>
-
-      <main>
-        <SlideDeck>
-          <Intro />
-          <Startups />
-          <Hackathons />
-          <Built />
-          <Robotics />
-          <Contact />
-        </SlideDeck>
+      <FloatingShapes />
+      <main className="relative">
+        <Hero />
+        <PlugAndPlay />
+        <Hackathons />
+        <OtherProjects />
+        <Hardware />
+        <Contact />
       </main>
     </>
   );
