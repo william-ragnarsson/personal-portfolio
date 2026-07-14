@@ -1,11 +1,11 @@
 import Reveal from "@/components/Reveal";
-import HackathonMap from "@/components/HackathonMap";
+import MapJourney from "@/components/MapJourney";
 import { mapData } from "@/lib/hackathonMap";
 
 export default function Hackathons() {
   return (
-    <section id="hackathons" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-[820px] px-6">
+    <section>
+      <div className="mx-auto max-w-[820px] px-6 py-24 sm:py-32">
         <Reveal>
           <p className="kicker text-accent-2">02 — Hackathons</p>
         </Reveal>
@@ -17,15 +17,14 @@ export default function Hackathons() {
         </Reveal>
         <Reveal delay={0.1}>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            Four cities, four builds, a couple of awards — I book the flight
-            first and figure out the project on the plane.
+            I book the flight first and figure out the project on the plane.
+            Scroll along with me — four countries, four builds, a couple of
+            awards.
           </p>
         </Reveal>
       </div>
 
-      <div className="mt-16 sm:mt-20">
-        <HackathonMap data={mapData} />
-      </div>
+      <MapJourney data={mapData} />
     </section>
   );
 }
