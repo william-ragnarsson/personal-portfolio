@@ -4,19 +4,19 @@ import { hackathons } from "@/data/content";
 // Runs at build time (server). Produces the dotted map SVG + pin coordinates
 // (in viewBox units) for the scroll-driven MapJourney.
 const map = new DottedMap({
-  height: 60,
+  height: 100,
   grid: "diagonal",
-  region: { lat: { min: 29, max: 72 }, lng: { min: -95, max: 62 } },
 });
 
 const dotsSvg = map
   .getSVG({
-    radius: 0.3,
-    color: "#33406a",
+    radius: 0.32,
+    color: "#8f8a7d",
     shape: "circle",
     backgroundColor: "transparent",
   })
-  .replace("<svg ", '<svg preserveAspectRatio="xMidYMid slice" ');
+  // show the whole world, contained (floats in whitespace — no box/edge)
+  .replace("<svg ", '<svg preserveAspectRatio="xMidYMid meet" ');
 
 const [, , vbW, vbH] = (
   dotsSvg.match(/viewBox="([^"]+)"/)?.[1] ?? "0 0 100 50"
