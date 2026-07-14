@@ -10,6 +10,14 @@ const BLUE = "#2b5cff";
 const CORAL = "#ff5a4d";
 const INTRO = 0.08; // small lead-in before the first city lights
 
+// Wide layout: the card floats over the map at a fixed width. The map is
+// positioned so all pins stay visible between the card and the right edge,
+// centered in that space when there's room, never sliding a pin behind the
+// card when there isn't.
+const CARD_WIDTH = 480;
+const CARD_GAP = 40;
+const EDGE_MARGIN = 40;
+
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
 function useWide() {
@@ -36,6 +44,7 @@ export default function MapJourney({ data }: { data: MapData }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(-1);
   const [line, setLine] = useState<Line | null>(null);
+  const [mapLeft, setMapLeft] = useState<number | null>(null);
 
   // Scroll advances the active city index.
   useEffect(() => {
@@ -61,8 +70,46 @@ export default function MapJourney({ data }: { data: MapData }) {
     };
   }, [reduce, n]);
 
-  // Connector line: measured after the DOM reflects the active card, so it
-  // never points at the previous (or collapsed/empty) card position.
+  // Wide layout: fit every pin between the card and the right edge,
+  // centered in that space when there's room. Depends only on container
+  // size (not the active city), so the map holds still while scrolling and
+  // only repositions when the browser is resized.
+  useLayoutEffect(() => {
+    // mapLeft is only read when wide, so a stale value here is harmless.
+    if (reduce || !wide) return;
+
+    const updatePosition = () => {
+      const container = stickyRef.current;
+      if (!container) return;
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+      const mapWidth = containerHeight * (data.vbW / data.vbH);
+
+      const xs = data.pins.map((p) => p.x / data.vbW);
+      const minFrac = Math.min(...xs);
+      const maxFrac = Math.max(...xs);
+      const clusterCenterFrac = (minFrac + maxFrac) / 2;
+
+      const visibleStart = CARD_WIDTH + CARD_GAP;
+      const visibleEnd = containerWidth - EDGE_MARGIN;
+      const desiredCenterX = (visibleStart + visibleEnd) / 2;
+
+      const minLeft = visibleStart - minFrac * mapWidth;
+      const maxLeft = visibleEnd - maxFrac * mapWidth;
+      const centered = desiredCenterX - clusterCenterFrac * mapWidth;
+
+      // Center when the whole cluster fits; otherwise never let it slide
+      // behind the card, even if that pushes pins past the right edge.
+      setMapLeft(minLeft <= maxLeft ? clamp(centered, minLeft, maxLeft) : minLeft);
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [reduce, wide, data]);
+
+  // Connector line: measured after the DOM reflects the active card and the
+  // repositioned map, so it never points at a stale position.
   useLayoutEffect(() => {
     if (reduce) return;
 
@@ -92,7 +139,7 @@ export default function MapJourney({ data }: { data: MapData }) {
     updateLine();
     window.addEventListener("resize", updateLine);
     return () => window.removeEventListener("resize", updateLine);
-  }, [reduce, active, wide, data]);
+  }, [reduce, active, wide, data, mapLeft]);
 
   const current = active >= 0 ? hackathons[active] : null;
 
@@ -129,8 +176,8 @@ export default function MapJourney({ data }: { data: MapData }) {
   const mapWrap = (
     <div
       ref={mapWrapRef}
-      className="absolute inset-y-0 left-0"
-      style={{ aspectRatio: `${data.vbW} / ${data.vbH}` }}
+      className="absolute inset-y-0"
+      style={{ aspectRatio: `${data.vbW} / ${data.vbH}`, left: wide ? mapLeft ?? 0 : 0 }}
     >
       <MapLayers data={data} activeIndex={active} />
     </div>
@@ -200,12 +247,17 @@ export default function MapJourney({ data }: { data: MapData }) {
     </div>
   );
 
-  // ── wide: two-column split — card on the left, map panel on the right ──
+  // ── wide: full-bleed map, fixed-width card floating on top of it ──
   if (wide) {
     return (
       <div ref={outerRef} style={{ height: `${n * 80 + 40}vh` }} className="relative">
-        <div ref={stickyRef} className="sticky top-0 flex h-screen w-full items-stretch overflow-hidden">
-          <div className="relative z-20 flex w-[40%] max-w-[560px] shrink-0 items-center px-[6%]">
+        <div ref={stickyRef} className="sticky top-0 h-screen w-full overflow-hidden">
+          {mapWrap}
+          {lineOverlay}
+          <div
+            className="absolute inset-y-0 left-0 z-20 flex items-center px-10"
+            style={{ width: CARD_WIDTH }}
+          >
             <div
               ref={cardRef}
               className={`w-full rounded-2xl border border-border bg-background-soft/80 p-8 shadow-sm backdrop-blur-sm transition-opacity duration-300 ${
@@ -215,8 +267,6 @@ export default function MapJourney({ data }: { data: MapData }) {
               {card}
             </div>
           </div>
-          <div className="relative flex-1 overflow-hidden">{mapWrap}</div>
-          {lineOverlay}
           {progressDots}
         </div>
       </div>
