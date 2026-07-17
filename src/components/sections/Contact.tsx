@@ -4,7 +4,6 @@ import { ArrowUpRight } from "@/components/ui/icons";
 
 const links = [
   { label: "Email", href: `mailto:${site.email}`, value: site.email },
-  { label: "GitHub", href: site.github, value: site.githubHandle },
   { label: "LinkedIn", href: site.linkedin, value: "william-ragnarsson" },
 ];
 
@@ -17,14 +16,14 @@ export default function Contact() {
 
       <Reveal delay={0.05}>
         <h2 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)]">
-          Reach out <span className="text-accent-2">to me!</span>
+          Let&apos;s <span className="text-accent-2">Talk!</span>
         </h2>
       </Reveal>
 
       <Reveal delay={0.1}>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-          I&apos;m always up for ambitious projects, internships, and
-          last-minute hackathon flights.
+          I&apos;m always looking to work on ambitious projects, with talented
+          people, and go big!
         </p>
       </Reveal>
 

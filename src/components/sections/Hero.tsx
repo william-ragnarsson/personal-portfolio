@@ -19,7 +19,7 @@ export default function Hero() {
 
       <Reveal delay={0.16}>
         <p className="mt-6 max-w-xl text-sm text-muted">
-          Want to build big, and give it my everything.
+          Want to work crazy hard and build big.
         </p>
       </Reveal>
 

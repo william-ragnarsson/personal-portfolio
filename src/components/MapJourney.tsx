@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { MapData } from "@/lib/hackathonMap";
 import { hackathons } from "@/data/content";
-import { ArrowUpRight } from "@/components/ui/icons";
+import { ArrowUpRight, Github } from "@/components/ui/icons";
 
 const BLUE = "#2b5cff";
 const CORAL = "#ff5a4d";
@@ -157,15 +157,24 @@ export default function MapJourney({ data }: { data: MapData }) {
                 <span className="font-medium">{h.city}</span>
                 <span className="ml-3 text-sm text-muted">{h.project}</span>
               </div>
-              {h.award ? (
-                <span className="shrink-0 rounded-full border border-accent-2/40 bg-accent-2/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-2">
-                  ★ {h.award}
-                </span>
-              ) : (
-                <span className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-muted">
-                  flew out
-                </span>
-              )}
+              <span className="flex shrink-0 items-center gap-3">
+                {h.award ? (
+                  <span className="rounded-full border border-accent-2/40 bg-accent-2/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-2">
+                    ★ {h.award}
+                  </span>
+                ) : null}
+                {h.repo ? (
+                  <a
+                    href={h.repo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted transition-colors hover:text-accent"
+                    aria-label={`${h.project} on GitHub`}
+                  >
+                    <Github className="h-4 w-4" />
+                  </a>
+                ) : null}
+              </span>
             </li>
           ))}
         </ul>
@@ -207,7 +216,7 @@ export default function MapJourney({ data }: { data: MapData }) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-        {current.country}
+        {current.country} · {current.event}
       </p>
       <h3 className="display mt-1 text-3xl text-ink sm:text-4xl">{current.city}</h3>
       <p className="mt-2 text-base font-medium" style={{ color: BLUE }}>
@@ -222,16 +231,28 @@ export default function MapJourney({ data }: { data: MapData }) {
           ★ {current.award}
         </p>
       ) : null}
-      {current.link ? (
-        <a
-          href={current.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent"
-        >
-          View project <ArrowUpRight className="h-3.5 w-3.5" />
-        </a>
-      ) : null}
+      <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
+        {current.repo ? (
+          <a
+            href={current.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
+          >
+            <Github className="h-4 w-4" /> GitHub
+          </a>
+        ) : null}
+        {current.link ? (
+          <a
+            href={current.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-accent"
+          >
+            View project <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
+      </div>
     </motion.div>
   ) : null;
 

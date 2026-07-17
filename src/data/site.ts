@@ -8,6 +8,6 @@ export const site = {
   linkedin: "https://www.linkedin.com/in/william-ragnarsson", // TODO: confirm handle
   pendulumDemo: "https://www.pendulum.williamragnarsson.com",
   repoUrl: "https://github.com/william-popmie/personal-portfolio",
-  // TODO: replace with the live VC-analyst demo URL
-  vcDemo: "https://TODO-live-demo",
+  vcDemo: "https://vcanalyst.williamragnarsson.dev",
+  vcRepo: "https://github.com/william-popmie/vc-analyst",
 } as const;

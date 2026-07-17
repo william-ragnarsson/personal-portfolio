@@ -17,11 +17,23 @@ export default function Hardware() {
 
       <Reveal delay={0.1}>
         <p className="mt-7 text-lg leading-relaxed text-muted">
-          This was a hardware startup, one I&apos;ve luckily moved on from —{" "}
+          It was a hardware startup — a more creative, hands-on project than
+          anything I&apos;d done before, and the thing that first lit the{" "}
           <span className="font-medium text-foreground">
-            100% head first into software
-          </span>{" "}
-          now.
+            drive to build startups
+          </span>
+          .
+        </p>
+      </Reveal>
+
+      <Reveal delay={0.14}>
+        <p className="mt-5 text-lg leading-relaxed text-muted">
+          I&apos;ve since moved on from the hardware, but not the itch. Ever
+          since, my focus has been{" "}
+          <span className="font-medium text-foreground">
+            100% startups
+          </span>
+          .
         </p>
       </Reveal>
     </section>

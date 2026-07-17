@@ -11,14 +11,13 @@ export default function Hackathons() {
         </Reveal>
         <Reveal delay={0.05}>
           <h2 className="display mt-5 text-[clamp(2rem,5.5vw,3.6rem)] leading-[1.05]">
-            I love doing <span className="text-accent-2">hackathons</span>!
+            Looooove doing{" "}
+            <span className="text-accent-2">hackathons</span>!!!
           </h2>
         </Reveal>
         <Reveal delay={0.1}>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            I book the flight first and figure out the project on the plane.
-            Scroll along with me — four countries, four builds, a couple of
-            awards.
+            Don&apos;t care where, just with whom :)
           </p>
         </Reveal>
       </div>
