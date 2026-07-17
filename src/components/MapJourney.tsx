@@ -216,9 +216,9 @@ export default function MapJourney({ data }: { data: MapData }) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-        {current.country} · {current.event}
+        {current.city}, {current.country}
       </p>
-      <h3 className="display mt-1 text-3xl text-ink sm:text-4xl">{current.city}</h3>
+      <h3 className="display mt-1 text-3xl text-ink sm:text-4xl">{current.event}</h3>
       <p className="mt-2 text-base font-medium" style={{ color: BLUE }}>
         {current.project}
       </p>

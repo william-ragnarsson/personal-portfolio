@@ -21,7 +21,7 @@ export default function Contact() {
       </Reveal>
 
       <Reveal delay={0.1}>
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+        <p className="mt-6 max-w-4-xl text-lg leading-relaxed text-muted">
           I&apos;m always looking to work on ambitious projects, with talented
           people, and go big!
         </p>
@@ -57,7 +57,7 @@ export default function Contact() {
           rel="noopener noreferrer"
           className="kicker transition-colors hover:text-accent"
         >
-          Vibe-coded. View source →
+          View source →
         </a>
       </div>
     </section>

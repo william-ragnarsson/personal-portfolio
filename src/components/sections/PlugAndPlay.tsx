@@ -6,7 +6,7 @@ export default function PlugAndPlay() {
   return (
     <section className="mx-auto max-w-[820px] px-6 py-24 sm:py-32">
       <Reveal>
-        <p className="kicker text-accent">01 — The internship</p>
+        <p className="kicker text-accent">01 — Last internship</p>
       </Reveal>
 
       <Reveal delay={0.05}>

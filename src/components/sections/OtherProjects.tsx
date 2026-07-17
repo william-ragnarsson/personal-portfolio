@@ -20,7 +20,7 @@ export default function OtherProjects() {
       <Reveal delay={0.1}>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
           Simulators, databases, dev tools, half-finished experiments. Most of it
-          lives on my GitHub — here&apos;s a taste.
+          lives on my GitHub.
         </p>
       </Reveal>
 

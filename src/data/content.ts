@@ -35,7 +35,6 @@ export const hackathons: Hackathon[] = [
     lat: 52.52,
     lng: 13.4,
     repo: "https://github.com/william-popmie/Team-zucc",
-    link: "https://zucc.it",
   },
   {
     city: "Stockholm",
