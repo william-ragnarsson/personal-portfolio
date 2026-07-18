@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import posthog from "posthog-js";
 import type { MapData } from "@/lib/hackathonMap";
 import { hackathons } from "@/data/content";
 import { ArrowUpRight, Github } from "@/components/ui/icons";
@@ -170,6 +171,13 @@ export default function MapJourney({ data }: { data: MapData }) {
                     rel="noopener noreferrer"
                     className="text-muted transition-colors hover:text-accent"
                     aria-label={`${h.project} on GitHub`}
+                    onClick={() =>
+                      posthog.capture("hackathon_repo_clicked", {
+                        hackathon_event: h.event,
+                        hackathon_city: h.city,
+                        project_name: h.project,
+                      })
+                    }
                   >
                     <Github className="h-4 w-4" />
                   </a>
@@ -238,6 +246,13 @@ export default function MapJourney({ data }: { data: MapData }) {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
+            onClick={() =>
+              posthog.capture("hackathon_repo_clicked", {
+                hackathon_event: current.event,
+                hackathon_city: current.city,
+                project_name: current.project,
+              })
+            }
           >
             <Github className="h-4 w-4" /> GitHub
           </a>
