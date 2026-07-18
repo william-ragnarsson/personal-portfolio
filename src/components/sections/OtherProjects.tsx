@@ -15,8 +15,7 @@ export default function OtherProjects() {
 
       <Reveal delay={0.05}>
         <h2 className="display mt-5 text-[clamp(2rem,5.5vw,3.6rem)] leading-[1.05]">
-          Have a look at my{" "}
-          <span className="text-accent-2">other projects</span> :)
+          Have a look at <span className="text-accent-2">all of my projects</span> :)
         </h2>
       </Reveal>
 

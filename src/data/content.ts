@@ -1,5 +1,7 @@
 // All editable copy + data for the narrative page.
 
+import { site } from "@/data/site";
+
 export type Hackathon = {
   city: string;
   country: string;
@@ -69,6 +71,12 @@ export type OtherProject = {
 // Kept deliberately brief — the point is "here's my GitHub + a taste".
 export const otherProjects: OtherProject[] = [
   {
+    name: "VC Analyst",
+    blurb: "AI due diligence trained on 800+ real pitch deck reviews.",
+    repo: site.vcRepo,
+    demo: site.vcDemo,
+  },
+  {
     name: "Double Pendulum",
     blurb: "Chaos, simulated on the GPU with WebGPU compute shaders.",
     repo: "https://github.com/william-popmie/double-pendulum",
@@ -81,7 +89,13 @@ export const otherProjects: OtherProject[] = [
   },
   {
     name: "Finance Tracker",
-    blurb: "A finance tracker I actually use.",
+    blurb: "host your own financial agentic database",
     repo: "https://github.com/william-popmie/finance-tracker",
   },
+  ...hackathons.map((hackathon) => ({
+    name: hackathon.project,
+    blurb: `${hackathon.event} in ${hackathon.city}.`,
+    repo: hackathon.repo,
+    demo: hackathon.link,
+  })),
 ];
