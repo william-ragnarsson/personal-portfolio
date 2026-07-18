@@ -1,3 +1,6 @@
+"use client";
+
+import posthog from "posthog-js";
 import Reveal from "@/components/Reveal";
 import { otherProjects } from "@/data/content";
 import { site } from "@/data/site";
@@ -30,6 +33,7 @@ export default function OtherProjects() {
           target="_blank"
           rel="noopener noreferrer"
           className="mt-7 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-background transition-transform hover:-translate-y-0.5"
+          onClick={() => posthog.capture("github_profile_clicked")}
         >
           <Github className="h-4 w-4" /> github.com/{site.githubHandle}
         </a>
@@ -44,7 +48,16 @@ export default function OtherProjects() {
               <li key={p.name}>
                 <Row
                   {...(href
-                    ? { href, target: "_blank", rel: "noopener noreferrer" }
+                    ? {
+                        href,
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        onClick: () =>
+                          posthog.capture("project_clicked", {
+                            project_name: p.name,
+                            link_type: p.demo ? "demo" : "repo",
+                          }),
+                      }
                     : {})}
                   className="group flex items-baseline justify-between gap-6 py-4"
                 >

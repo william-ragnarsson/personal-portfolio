@@ -1,3 +1,6 @@
+"use client";
+
+import posthog from "posthog-js";
 import Reveal from "@/components/Reveal";
 import { site } from "@/data/site";
 import { ArrowUpRight } from "@/components/ui/icons";
@@ -36,6 +39,7 @@ export default function Contact() {
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center justify-between gap-6 py-5"
+              onClick={() => posthog.capture("contact_link_clicked", { link_type: l.label.toLowerCase() })}
             >
               <span className="flex items-baseline gap-4">
                 <span className="kicker w-20 text-muted">{l.label}</span>
@@ -56,6 +60,7 @@ export default function Contact() {
           target="_blank"
           rel="noopener noreferrer"
           className="kicker transition-colors hover:text-accent"
+          onClick={() => posthog.capture("source_repo_clicked")}
         >
           View source →
         </a>

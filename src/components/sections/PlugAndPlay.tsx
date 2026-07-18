@@ -1,3 +1,6 @@
+"use client";
+
+import posthog from "posthog-js";
 import Reveal from "@/components/Reveal";
 import { site } from "@/data/site";
 import { ArrowUpRight, Github } from "@/components/ui/icons";
@@ -49,6 +52,7 @@ export default function PlugAndPlay() {
           target="_blank"
           rel="noopener noreferrer"
           className="group mt-9 block overflow-hidden rounded-2xl border border-border bg-background-soft shadow-sm transition-transform hover:-translate-y-0.5"
+          onClick={() => posthog.capture("vc_analyst_demo_clicked", { source: "card" })}
         >
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
             <span className="flex items-center gap-1.5 truncate font-mono text-xs text-muted">
@@ -84,6 +88,7 @@ export default function PlugAndPlay() {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 font-medium transition-colors hover:text-accent"
+            onClick={() => posthog.capture("vc_analyst_demo_clicked", { source: "try_it_out" })}
           >
             Try it out yourself <ArrowUpRight className="h-4 w-4" />
           </a>
@@ -92,6 +97,7 @@ export default function PlugAndPlay() {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-foreground"
+            onClick={() => posthog.capture("vc_analyst_repo_clicked")}
           >
             <Github className="h-4 w-4" /> Source
           </a>
