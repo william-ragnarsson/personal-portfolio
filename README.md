@@ -35,4 +35,4 @@ Sections live in `src/components/sections/`, shared UI in `src/components/ui/`.
   `public/robotics/`, replace the placeholder slots with `<Image>`/`<video>`, and add a couple
   sentences of context. Remove the helper note once real media is in.
 - Confirm the **LinkedIn URL** in `src/data/site.ts` (currently a guess).
-- Confirm the public **GitHub handle** (`william-popmie`) is the one you want surfaced.
+- Public **GitHub handle** confirmed as `william-ragnarsson`.
