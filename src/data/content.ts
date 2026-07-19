@@ -25,7 +25,7 @@ export const hackathons: Hackathon[] = [
     blurb: "MCP layer that replaces sensitive placeholders with AI-generated placeholder content", // TODO: fill in the real NYC project + blurb
     lat: 40.71,
     lng: -74.0,
-    repo: "https://github.com/william-popmie/Placeholder",
+    repo: "https://github.com/william-ragnarsson/Placeholder",
   },
   {
     city: "Berlin",
@@ -36,7 +36,7 @@ export const hackathons: Hackathon[] = [
     award: "3rd place",
     lat: 52.52,
     lng: 13.4,
-    repo: "https://github.com/william-popmie/Team-zucc",
+    repo: "https://github.com/william-ragnarsson/Team-zucc",
   },
   {
     city: "Stockholm",
@@ -46,7 +46,7 @@ export const hackathons: Hackathon[] = [
     blurb: "AI  agent that helps developers refactor legacy code to greener and more energy efficient code",
     lat: 59.33,
     lng: 18.07,
-    repo: "https://github.com/william-popmie/project-net-zero-backend",
+    repo: "https://github.com/william-ragnarsson/project-net-zero-backend",
   },
   {
     city: "Belgium",
@@ -57,7 +57,7 @@ export const hackathons: Hackathon[] = [
     award: "Best Pitch Award",
     lat: 50.85,
     lng: 4.35,
-    repo: "https://github.com/william-popmie/DataForGoodChallenge",
+    repo: "https://github.com/william-ragnarsson/DataForGoodChallenge",
   },
 ];
 
@@ -79,18 +79,18 @@ export const otherProjects: OtherProject[] = [
   {
     name: "Double Pendulum",
     blurb: "Chaos, simulated on the GPU with WebGPU compute shaders.",
-    repo: "https://github.com/william-popmie/double-pendulum",
+    repo: "https://github.com/william-ragnarsson/double-pendulum",
     demo: "https://www.pendulum.williamragnarsson.com",
   },
   {
     name: "Resume Generator",
     blurb: "Turns your repos into a real LaTeX résumé with Claude.",
-    repo: "https://github.com/william-popmie/dev-resume-generator",
+    repo: "https://github.com/william-ragnarsson/dev-resume-generator",
   },
   {
     name: "Finance Tracker",
     blurb: "host your own financial agentic database",
-    repo: "https://github.com/william-popmie/finance-tracker",
+    repo: "https://github.com/william-ragnarsson/finance-tracker",
   },
   ...hackathons.map((hackathon) => ({
     name: hackathon.project,
