@@ -263,6 +263,13 @@ export default function MapJourney({ data }: { data: MapData }) {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-accent"
+            onClick={() =>
+              posthog.capture("hackathon_link_clicked", {
+                hackathon_event: current.event,
+                hackathon_city: current.city,
+                project_name: current.project,
+              })
+            }
           >
             View project <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
