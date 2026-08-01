@@ -110,7 +110,13 @@ export default function MapJourney({ data }: { data: MapData }) {
       const maxFrac = Math.max(...xs);
       const clusterCenterFrac = (minFrac + maxFrac) / 2;
 
-      const visibleStart = CARD_WIDTH + CARD_GAP;
+      // The column's left gutter is CSS-driven and responsive, so measure it
+      // rather than assuming the column starts at x = 0.
+      const colEl = cardColRef.current;
+      const colLeft = colEl
+        ? colEl.getBoundingClientRect().left - container.getBoundingClientRect().left
+        : 0;
+      const visibleStart = colLeft + CARD_WIDTH + CARD_GAP;
       const visibleEnd = containerWidth - EDGE_MARGIN;
       const desiredCenterX = (visibleStart + visibleEnd) / 2;
 
@@ -259,7 +265,7 @@ export default function MapJourney({ data }: { data: MapData }) {
           {connectors}
           <div
             ref={cardColRef}
-            className="absolute inset-y-0 left-0 z-20 overflow-hidden"
+            className="absolute inset-y-0 left-10 z-20 overflow-hidden lg:left-16 xl:left-24 2xl:left-32"
             style={{ width: CARD_WIDTH }}
           >
             {cardStack}
@@ -307,10 +313,33 @@ function CityCard({
   className: string;
 }) {
   const y = useTransform(t, (v) => (index - v) * CARD_SPACING);
+  // How close the scroll is to this card — 1 when parked on it, 0 a full city
+  // away. Awarded cities use it to bloom their badge and card glow.
+  const near = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  const badgeOpacity = useTransform(near, [0, 0.55, 1], [0, 0, 1]);
+  const badgeScale = useTransform(near, [0.55, 1], [0.88, 1]);
+  const badgeY = useTransform(near, [0.55, 1], [8, 0]);
+  const glow = useTransform(
+    near,
+    [0.4, 1],
+    // Both ends must have the same shadow-layer shape or the interpolation
+    // snaps instead of ramping.
+    [
+      "0 0 0 0px rgba(255,90,77,0), 0 12px 40px -12px rgba(255,90,77,0)",
+      "0 0 0 1px rgba(255,90,77,0.45), 0 12px 40px -12px rgba(255,90,77,0.35)",
+    ],
+  );
   return (
     <motion.div
       className={`absolute flex flex-col justify-center rounded-2xl border border-border bg-background-soft/80 shadow-sm backdrop-blur-sm ${className}`}
-      style={{ top: "50%", marginTop: -CARD_H / 2, height: CARD_H, y, pointerEvents: focused ? "auto" : "none" }}
+      style={{
+        top: "50%",
+        marginTop: -CARD_H / 2,
+        height: CARD_H,
+        y,
+        pointerEvents: focused ? "auto" : "none",
+        ...(h.award ? { boxShadow: glow } : null),
+      }}
       aria-hidden={focused ? undefined : true}
     >
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
@@ -322,12 +351,12 @@ function CityCard({
       </p>
       <p className="mt-3 text-sm leading-relaxed text-muted">{h.blurb}</p>
       {h.award ? (
-        <p
-          className="mt-3 font-mono text-[11px] font-bold uppercase tracking-wider"
-          style={{ color: CORAL }}
+        <motion.span
+          className="mt-3 self-start rounded-full border border-accent-2/40 bg-accent-2/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-2"
+          style={{ opacity: badgeOpacity, scale: badgeScale, y: badgeY }}
         >
           ★ {h.award}
-        </p>
+        </motion.span>
       ) : null}
       <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
         {h.repo ? (
