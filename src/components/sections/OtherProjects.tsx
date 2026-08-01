@@ -2,9 +2,9 @@
 
 import posthog from "posthog-js";
 import Reveal from "@/components/Reveal";
-import { otherProjects } from "@/data/content";
+import ProjectCards from "@/components/ProjectCards";
 import { site } from "@/data/site";
-import { ArrowUpRight, Github } from "@/components/ui/icons";
+import { Github } from "@/components/ui/icons";
 
 export default function OtherProjects() {
   return (
@@ -38,41 +38,7 @@ export default function OtherProjects() {
         </a>
       </Reveal>
 
-      <Reveal delay={0.18}>
-        <ul className="mt-10 divide-y divide-border border-y border-border">
-          {otherProjects.map((p) => {
-            const href = p.demo ?? p.repo;
-            const Row = href ? "a" : "div";
-            return (
-              <li key={p.name}>
-                <Row
-                  {...(href
-                    ? {
-                        href,
-                        target: "_blank",
-                        rel: "noopener noreferrer",
-                        onClick: () =>
-                          posthog.capture("project_clicked", {
-                            project_name: p.name,
-                            link_type: p.demo ? "demo" : "repo",
-                          }),
-                      }
-                    : {})}
-                  className="group flex items-baseline justify-between gap-6 py-4"
-                >
-                  <div>
-                    <span className="text-lg font-medium">{p.name}</span>
-                    <span className="ml-3 text-sm text-muted">{p.blurb}</span>
-                  </div>
-                  {href ? (
-                    <ArrowUpRight className="h-4 w-4 shrink-0 translate-y-1 text-muted transition-colors group-hover:text-accent" />
-                  ) : null}
-                </Row>
-              </li>
-            );
-          })}
-        </ul>
-      </Reveal>
+      <ProjectCards />
     </section>
   );
 }
