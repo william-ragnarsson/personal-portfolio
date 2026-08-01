@@ -382,8 +382,8 @@ function Connector({
   y2: number;
 }) {
   const y1 = useTransform(t, (v) => baseY + (index - v) * CARD_SPACING);
-  const lineOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)) * 0.6);
-  const dotOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)) * 0.9);
+  const lineOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  const dotOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
   return (
     <g>
       <motion.line
@@ -392,11 +392,12 @@ function Connector({
         x2={x2}
         y2={y2}
         stroke={CORAL}
-        strokeWidth={1.5}
-        strokeDasharray="3 4"
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeDasharray="1 6"
         opacity={lineOpacity}
       />
-      <motion.circle cx={x2} cy={y2} r={3} fill={CORAL} opacity={dotOpacity} />
+      <motion.circle cx={x2} cy={y2} r={4} fill={CORAL} opacity={dotOpacity} />
     </g>
   );
 }
