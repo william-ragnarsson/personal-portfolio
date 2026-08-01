@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import posthog from "posthog-js";
 import type { MapData } from "@/lib/hackathonMap";
 import { hackathons } from "@/data/content";
@@ -9,7 +16,6 @@ import { ArrowUpRight, Github } from "@/components/ui/icons";
 
 const BLUE = "#2b5cff";
 const CORAL = "#ff5a4d";
-const INTRO = 0.08; // small lead-in before the first city lights
 
 // Wide layout: the card floats over the map at a fixed width. The map is
 // positioned so all pins stay visible between the card and the right edge,
@@ -18,6 +24,19 @@ const INTRO = 0.08; // small lead-in before the first city lights
 const CARD_WIDTH = 480;
 const CARD_GAP = 40;
 const EDGE_MARGIN = 40;
+
+// The card frame is a clipped window; cards ride through it on a conveyor. Its
+// height (px) is also the travel distance for one city. The whole interaction
+// is scroll-linked: every value below is a pure function of the continuous
+// journey position `t`, so each scroll tick moves pixels and you can rest in
+// any in-between state. There are no time-based transitions.
+const CARD_H_WIDE = 360;
+const CARD_H_NARROW = 320;
+
+// Softens cards as they slide in/out the top and bottom of the clipped frame.
+// Applied to the inner track (not the frame) so the frame border stays crisp.
+const EDGE_FADE =
+  "linear-gradient(to bottom, transparent 0%, #000 11%, #000 89%, transparent 100%)";
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
@@ -33,7 +52,10 @@ function useWide() {
   return wide;
 }
 
-type Line = { x1: number; y1: number; x2: number; y2: number };
+// Screen geometry (in sticky-container coordinates) for drawing connector
+// lines. The map holds still and the card frame is fixed, so this only needs
+// recomputing on resize / layout changes — never per scroll frame.
+type Geo = { x1: number; y1: number; pins: { x: number; y: number }[] };
 
 export default function MapJourney({ data }: { data: MapData }) {
   const reduce = useReducedMotion();
@@ -42,41 +64,34 @@ export default function MapJourney({ data }: { data: MapData }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(-1);
-  const [line, setLine] = useState<Line | null>(null);
+  const cardFrameRef = useRef<HTMLDivElement>(null);
+  const [geo, setGeo] = useState<Geo | null>(null);
   const [mapLeft, setMapLeft] = useState<number | null>(null);
 
-  // Scroll advances the active city index.
-  useEffect(() => {
-    if (reduce) return;
+  // Continuous journey position. `t === i` means "parked on city i"; fractional
+  // values are the in-between states. A small negative start lets city 0 slide
+  // in as you enter the section.
+  const { scrollYProgress } = useScroll({
+    target: outerRef,
+    offset: ["start start", "end end"],
+  });
+  const t = useTransform(scrollYProgress, [0, 1], [-0.85, Math.max(0, n - 1)]);
 
-    const onScroll = () => {
-      const outer = outerRef.current;
-      if (!outer) return;
-      const y = window.scrollY;
-      const top = outer.getBoundingClientRect().top + y;
-      const len = Math.max(1, outer.offsetHeight - window.innerHeight);
-      const p = clamp((y - top) / len);
-      const idx = p < INTRO ? -1 : Math.min(n - 1, Math.floor(((p - INTRO) / (1 - INTRO)) * n));
-      setActive((a) => (a === idx ? a : idx));
-    };
+  // Rounded index, updated only when it flips — for the few things that need
+  // real React state (pointer-events / aria on the focused card).
+  const [focus, setFocus] = useState(0);
+  useMotionValueEvent(t, "change", (v) => {
+    const i = clamp(Math.round(v), 0, n - 1);
+    setFocus((f) => (f === i ? f : i));
+  });
 
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [reduce, n]);
+  // The card frame fades in as city 0 arrives, then stays put.
+  const frameOpacity = useTransform(t, [-0.85, -0.1], [0, 1]);
 
-  // Wide layout: fit every pin between the card and the right edge,
-  // centered in that space when there's room. Depends only on container
-  // size (not the active city), so the map holds still while scrolling and
-  // only repositions when the browser is resized.
+  // Wide layout: fit every pin between the card and the right edge, centered in
+  // that space when there's room. Depends only on container size (not scroll),
+  // so the map holds still and only repositions when the browser is resized.
   useLayoutEffect(() => {
-    // mapLeft is only read when wide, so a stale value here is harmless.
     if (reduce || !wide) return;
 
     const updatePosition = () => {
@@ -109,47 +124,47 @@ export default function MapJourney({ data }: { data: MapData }) {
     return () => window.removeEventListener("resize", updatePosition);
   }, [reduce, wide, data]);
 
-  // Connector line: measured after the DOM reflects the active card and the
-  // repositioned map, so it never points at a stale position.
+  // Static line geometry: the frame anchor and every pin's screen position.
+  // Recomputed after layout (and when the map repositions), not on scroll.
   useLayoutEffect(() => {
     if (reduce) return;
 
-    const updateLine = () => {
+    const updateGeo = () => {
       const containerEl = stickyRef.current;
       const mapEl = mapWrapRef.current;
-      const cardEl = cardRef.current;
-      const pin = active >= 0 ? data.pins[active] : null;
-      if (!containerEl || !mapEl || !cardEl || !pin) {
-        setLine(null);
-        return;
-      }
+      const frameEl = cardFrameRef.current;
+      if (!containerEl || !mapEl || !frameEl) return;
+
       const containerRect = containerEl.getBoundingClientRect();
       const mapRect = mapEl.getBoundingClientRect();
-      const cardRect = cardEl.getBoundingClientRect();
-      const x2 = mapRect.left + (pin.x / data.vbW) * mapRect.width - containerRect.left;
-      const y2 = mapRect.top + (pin.y / data.vbH) * mapRect.height - containerRect.top;
+      const frameRect = frameEl.getBoundingClientRect();
+
       const x1 = wide
-        ? cardRect.right - containerRect.left
-        : cardRect.left + cardRect.width / 2 - containerRect.left;
+        ? frameRect.right - containerRect.left
+        : frameRect.left + frameRect.width / 2 - containerRect.left;
       const y1 = wide
-        ? cardRect.top + cardRect.height / 2 - containerRect.top
-        : cardRect.top - containerRect.top;
-      setLine({ x1, y1, x2, y2 });
+        ? frameRect.top + frameRect.height / 2 - containerRect.top
+        : frameRect.top - containerRect.top;
+
+      const pins = data.pins.map((p) => ({
+        x: mapRect.left + (p.x / data.vbW) * mapRect.width - containerRect.left,
+        y: mapRect.top + (p.y / data.vbH) * mapRect.height - containerRect.top,
+      }));
+
+      setGeo({ x1, y1, pins });
     };
 
-    updateLine();
-    window.addEventListener("resize", updateLine);
-    return () => window.removeEventListener("resize", updateLine);
-  }, [reduce, active, wide, data, mapLeft]);
-
-  const current = active >= 0 ? hackathons[active] : null;
+    updateGeo();
+    window.addEventListener("resize", updateGeo);
+    return () => window.removeEventListener("resize", updateGeo);
+  }, [reduce, wide, data, mapLeft]);
 
   // ── reduced motion: whole world + list (accessible fallback) ──
   if (reduce) {
     return (
       <div className="mx-auto max-w-[900px] px-6">
         <div className="relative mx-auto w-[86%]" style={{ aspectRatio: `${data.vbW} / ${data.vbH}` }}>
-          <MapLayers data={data} activeIndex={n - 1} />
+          <MapLayersStatic data={data} activeIndex={n - 1} />
         </div>
         <ul className="mt-6 divide-y divide-border border-y border-border">
           {hackathons.map((h) => (
@@ -196,96 +211,31 @@ export default function MapJourney({ data }: { data: MapData }) {
       className="absolute inset-y-0"
       style={{ aspectRatio: `${data.vbW} / ${data.vbH}`, left: wide ? mapLeft ?? 0 : 0 }}
     >
-      <MapLayers data={data} activeIndex={active} />
+      <MapLayersLive data={data} t={t} />
     </div>
   );
 
-  const lineOverlay = line ? (
+  const connectors = geo ? (
     <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
-      <line
-        x1={line.x1}
-        y1={line.y1}
-        x2={line.x2}
-        y2={line.y2}
-        stroke={CORAL}
-        strokeWidth={1.5}
-        strokeDasharray="3 4"
-        opacity={0.55}
-      />
-      <circle cx={line.x2} cy={line.y2} r={3} fill={CORAL} opacity={0.9} />
+      {geo.pins.map((pin, i) => (
+        <Connector key={data.pins[i].city} index={i} t={t} x1={geo.x1} y1={geo.y1} x2={pin.x} y2={pin.y} />
+      ))}
     </svg>
   ) : null;
 
-  const card = current ? (
-    <motion.div
-      key={current.city}
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-        {current.city}, {current.country}
-      </p>
-      <h3 className="display mt-1 text-3xl text-ink sm:text-4xl">{current.event}</h3>
-      <p className="mt-2 text-base font-medium" style={{ color: BLUE }}>
-        {current.project}
-      </p>
-      <p className="mt-3 text-sm leading-relaxed text-muted">{current.blurb}</p>
-      {current.award ? (
-        <p
-          className="mt-3 font-mono text-[11px] font-bold uppercase tracking-wider"
-          style={{ color: CORAL }}
-        >
-          ★ {current.award}
-        </p>
-      ) : null}
-      <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
-        {current.repo ? (
-          <a
-            href={current.repo}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
-            onClick={() =>
-              posthog.capture("hackathon_repo_clicked", {
-                hackathon_event: current.event,
-                hackathon_city: current.city,
-                project_name: current.project,
-              })
-            }
-          >
-            <Github className="h-4 w-4" /> GitHub
-          </a>
-        ) : null}
-        {current.link ? (
-          <a
-            href={current.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent"
-            onClick={() =>
-              posthog.capture("hackathon_link_clicked", {
-                hackathon_event: current.event,
-                hackathon_city: current.city,
-                project_name: current.project,
-              })
-            }
-          >
-            View project <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
-        ) : null}
-      </div>
-    </motion.div>
-  ) : null;
+  const cardH = wide ? CARD_H_WIDE : CARD_H_NARROW;
+  const cardStack = (
+    <div className="absolute inset-0" style={{ maskImage: EDGE_FADE, WebkitMaskImage: EDGE_FADE }}>
+      {hackathons.map((h, i) => (
+        <CityCard key={h.city} h={h} index={i} t={t} focused={focus === i} h_px={cardH} pad={wide ? "p-8" : "p-6"} />
+      ))}
+    </div>
+  );
 
   const progressDots = (
     <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-2">
       {data.pins.map((p, i) => (
-        <span
-          key={p.city}
-          className="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-          style={{ background: i <= active ? CORAL : "rgba(22,21,15,0.18)" }}
-        />
+        <Dot key={p.city} index={i} t={t} />
       ))}
     </div>
   );
@@ -293,22 +243,21 @@ export default function MapJourney({ data }: { data: MapData }) {
   // ── wide: full-bleed map, fixed-width card floating on top of it ──
   if (wide) {
     return (
-      <div ref={outerRef} style={{ height: `${n * 80 + 40}vh` }} className="relative">
+      <div ref={outerRef} style={{ height: `${n * 60 + 30}vh` }} className="relative">
         <div ref={stickyRef} className="sticky top-0 h-screen w-full overflow-hidden">
           {mapWrap}
-          {lineOverlay}
+          {connectors}
           <div
             className="absolute inset-y-0 left-0 z-20 flex items-center px-10"
             style={{ width: CARD_WIDTH }}
           >
-            <div
-              ref={cardRef}
-              className={`w-full rounded-2xl border border-border bg-background-soft/80 p-8 shadow-sm backdrop-blur-sm transition-opacity duration-300 ${
-                current ? "opacity-100" : "opacity-0"
-              }`}
+            <motion.div
+              ref={cardFrameRef}
+              className="relative w-full overflow-hidden rounded-2xl border border-border bg-background-soft/80 shadow-sm backdrop-blur-sm"
+              style={{ opacity: frameOpacity, height: CARD_H_WIDE }}
             >
-              {card}
-            </div>
+              {cardStack}
+            </motion.div>
           </div>
           {progressDots}
         </div>
@@ -318,27 +267,151 @@ export default function MapJourney({ data }: { data: MapData }) {
 
   // ── narrow: sticky map near the top, bordered card below it ──
   return (
-    <div ref={outerRef} style={{ height: `${n * 70 + 30}vh` }} className="relative">
+    <div ref={outerRef} style={{ height: `${n * 55 + 25}vh` }} className="relative">
       <div ref={stickyRef} className="sticky top-0 w-full">
         <div className="relative h-[42vh] w-full overflow-hidden">{mapWrap}</div>
         <div className="relative px-6 pb-8 pt-6">
-          <div
-            ref={cardRef}
-            className={`rounded-2xl border border-border bg-background-soft/80 p-6 shadow-sm backdrop-blur-sm transition-opacity duration-300 ${
-              current ? "opacity-100" : "opacity-0"
-            }`}
+          <motion.div
+            ref={cardFrameRef}
+            className="relative overflow-hidden rounded-2xl border border-border bg-background-soft/80 shadow-sm backdrop-blur-sm"
+            style={{ opacity: frameOpacity, height: CARD_H_NARROW }}
           >
-            {card}
-          </div>
+            {cardStack}
+          </motion.div>
         </div>
-        {lineOverlay}
+        {connectors}
       </div>
     </div>
   );
 }
 
-/* whole-world dots + marked city dots (colour transitions on scroll) */
-function MapLayers({ data, activeIndex }: { data: MapData; activeIndex: number }) {
+/* One city's card riding the conveyor. Its vertical position is a pure function
+   of the scroll position: at `t === index` it sits in the window; as the scroll
+   advances it slides up and out the top while the next card rises from below.
+   Cards are fully opaque and the frame clips them, so text never overlaps and
+   you can freeze in any in-between state. */
+function CityCard({
+  h,
+  index,
+  t,
+  focused,
+  h_px,
+  pad,
+}: {
+  h: (typeof hackathons)[number];
+  index: number;
+  t: MotionValue<number>;
+  focused: boolean;
+  h_px: number;
+  pad: string;
+}) {
+  const y = useTransform(t, (v) => (index - v) * h_px);
+  return (
+    <motion.div
+      className={`absolute inset-x-0 top-0 flex flex-col justify-center ${pad}`}
+      style={{ height: h_px, y, pointerEvents: focused ? "auto" : "none" }}
+      aria-hidden={focused ? undefined : true}
+    >
+      <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        {h.city}, {h.country}
+      </p>
+      <h3 className="display mt-1 text-3xl text-ink sm:text-4xl">{h.event}</h3>
+      <p className="mt-2 text-base font-medium" style={{ color: BLUE }}>
+        {h.project}
+      </p>
+      <p className="mt-3 text-sm leading-relaxed text-muted">{h.blurb}</p>
+      {h.award ? (
+        <p
+          className="mt-3 font-mono text-[11px] font-bold uppercase tracking-wider"
+          style={{ color: CORAL }}
+        >
+          ★ {h.award}
+        </p>
+      ) : null}
+      <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
+        {h.repo ? (
+          <a
+            href={h.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
+            onClick={() =>
+              posthog.capture("hackathon_repo_clicked", {
+                hackathon_event: h.event,
+                hackathon_city: h.city,
+                project_name: h.project,
+              })
+            }
+          >
+            <Github className="h-4 w-4" /> GitHub
+          </a>
+        ) : null}
+        {h.link ? (
+          <a
+            href={h.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-accent"
+          >
+            View project <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
+      </div>
+    </motion.div>
+  );
+}
+
+/* Dotted line from the card frame to a city's pin. Its opacity tracks how close
+   the scroll is to that city, so during a transition the outgoing and incoming
+   lines are both drawn to their respective cities. */
+function Connector({
+  index,
+  t,
+  x1,
+  y1,
+  x2,
+  y2,
+}: {
+  index: number;
+  t: MotionValue<number>;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}) {
+  const lineOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)) * 0.6);
+  const dotOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)) * 0.9);
+  return (
+    <g>
+      <motion.line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={CORAL}
+        strokeWidth={1.5}
+        strokeDasharray="3 4"
+        opacity={lineOpacity}
+      />
+      <motion.circle cx={x2} cy={y2} r={3} fill={CORAL} opacity={dotOpacity} />
+    </g>
+  );
+}
+
+/* Progress dot that fills coral as the scroll passes its city. */
+function Dot({ index, t }: { index: number; t: MotionValue<number> }) {
+  const opacity = useTransform(t, (v) => clamp(v - index + 0.5));
+  return (
+    <span className="relative h-1.5 w-1.5">
+      <span className="absolute inset-0 rounded-full" style={{ background: "rgba(22,21,15,0.18)" }} />
+      <motion.span className="absolute inset-0 rounded-full" style={{ background: CORAL, opacity }} />
+    </span>
+  );
+}
+
+/* Live map: pins light up progressively as the scroll passes them, and the
+   nearest city gets the pulse — all driven by the continuous scroll position. */
+function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
   return (
     <>
       <div
@@ -350,36 +423,71 @@ function MapLayers({ data, activeIndex }: { data: MapData; activeIndex: number }
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 h-full w-full"
       >
-        <defs>
-          <filter id="mapglow" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="0.6" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+        <MapGlowDef />
+        {data.pins.map((p, i) => (
+          <Pin key={p.city} p={p} index={i} t={t} />
+        ))}
+      </svg>
+    </>
+  );
+}
+
+function Pin({ p, index, t }: { p: MapData["pins"][number]; index: number; t: MotionValue<number> }) {
+  const coralOpacity = useTransform(t, (v) => clamp(v - index + 0.5));
+  const r = useTransform(t, (v) => 1.15 + 0.45 * clamp(1 - Math.abs(v - index)));
+  // The pulse keyframe animates its own opacity, so gate visibility with the
+  // wrapping group — only the pin nearest the scroll position pulses.
+  const pulseGate = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  return (
+    <g filter="url(#mapglow)">
+      <motion.g opacity={pulseGate}>
+        <circle cx={p.x} cy={p.y} r={1.9} fill={CORAL} className="pulse-ring" />
+      </motion.g>
+      <circle cx={p.x} cy={p.y} r={1.15} fill={BLUE} />
+      <motion.circle cx={p.x} cy={p.y} r={r} fill={CORAL} opacity={coralOpacity} />
+      <circle cx={p.x} cy={p.y} r={0.4} fill="#fff" opacity={0.9} />
+    </g>
+  );
+}
+
+/* Static map for the reduced-motion fallback. */
+function MapLayersStatic({ data, activeIndex }: { data: MapData; activeIndex: number }) {
+  return (
+    <>
+      <div
+        className="absolute inset-0 [&_svg]:block [&_svg]:h-full [&_svg]:w-full"
+        dangerouslySetInnerHTML={{ __html: data.dotsSvg }}
+      />
+      <svg
+        viewBox={`0 0 ${data.vbW} ${data.vbH}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0 h-full w-full"
+      >
+        <MapGlowDef />
         {data.pins.map((p, i) => {
           const lit = i <= activeIndex;
-          const isActive = i === activeIndex;
-          const c = lit ? CORAL : BLUE;
           return (
             <g key={p.city} filter="url(#mapglow)">
-              {isActive ? (
-                <circle className="pulse-ring" cx={p.x} cy={p.y} r="1.9" fill={CORAL} opacity="0.5" />
-              ) : null}
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r={isActive ? 1.6 : 1.15}
-                fill={c}
-                style={{ transition: "fill 0.4s ease, r 0.4s ease" }}
-              />
-              <circle cx={p.x} cy={p.y} r="0.4" fill="#fff" opacity="0.9" />
+              <circle cx={p.x} cy={p.y} r={1.15} fill={lit ? CORAL : BLUE} />
+              <circle cx={p.x} cy={p.y} r={0.4} fill="#fff" opacity={0.9} />
             </g>
           );
         })}
       </svg>
     </>
+  );
+}
+
+function MapGlowDef() {
+  return (
+    <defs>
+      <filter id="mapglow" x="-200%" y="-200%" width="500%" height="500%">
+        <feGaussianBlur stdDeviation="0.6" result="b" />
+        <feMerge>
+          <feMergeNode in="b" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
   );
 }
