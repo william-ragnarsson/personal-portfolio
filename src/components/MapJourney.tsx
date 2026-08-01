@@ -263,9 +263,13 @@ export default function MapJourney({ data }: { data: MapData }) {
         <div ref={stickyRef} className="sticky top-0 h-screen w-full overflow-hidden">
           {mapWrap}
           {connectors}
+          {/* Left gutter is fluid: it grows with the viewport on roomy screens
+              and tightens back to 40px as the screen slims, where the map needs
+              every pixel. `updatePosition` measures it, so this stays the one
+              place it's defined. */}
           <div
             ref={cardColRef}
-            className="absolute inset-y-0 left-10 z-20 overflow-hidden lg:left-16 xl:left-24 2xl:left-32"
+            className="absolute inset-y-0 left-10 z-20 overflow-hidden lg:left-[clamp(4rem,11vw,16rem)]"
             style={{ width: CARD_WIDTH }}
           >
             {cardStack}
