@@ -25,18 +25,23 @@ const CARD_WIDTH = 480;
 const CARD_GAP = 40;
 const EDGE_MARGIN = 40;
 
-// The card frame is a clipped window; cards ride through it on a conveyor. Its
-// height (px) is also the travel distance for one city. The whole interaction
-// is scroll-linked: every value below is a pure function of the continuous
-// journey position `t`, so each scroll tick moves pixels and you can rest in
-// any in-between state. There are no time-based transitions.
-const CARD_H_WIDE = 360;
-const CARD_H_NARROW = 320;
+// Each location is its own separate card; the cards ride vertically like a
+// carousel. `CARD_H` is a card's height and `CARD_SPACING` is the distance
+// between consecutive card centres as the scroll advances one city — a little
+// taller than the card so neighbours peek and two cards share the screen mid-
+// transition. The whole interaction is scroll-linked: every value below is a
+// pure function of the continuous journey position `t`, so each scroll tick
+// moves pixels and you can rest in any in-between state. No time-based anims.
+const CARD_H = 300;
+const CARD_SPACING = 348;
+// Horizontal gutter between a wide-layout card and its column edges (px).
+const CARD_INSET = 40;
+// Height of the narrow-layout carousel window (clips the peeking neighbours).
+const NARROW_VIEWPORT = 420;
 
-// Softens cards as they slide in/out the top and bottom of the clipped frame.
-// Applied to the inner track (not the frame) so the frame border stays crisp.
+// Softens cards as they enter/leave the top and bottom of the carousel window.
 const EDGE_FADE =
-  "linear-gradient(to bottom, transparent 0%, #000 11%, #000 89%, transparent 100%)";
+  "linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%)";
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
@@ -55,7 +60,9 @@ function useWide() {
 // Screen geometry (in sticky-container coordinates) for drawing connector
 // lines. The map holds still and the card frame is fixed, so this only needs
 // recomputing on resize / layout changes — never per scroll frame.
-type Geo = { x1: number; y1: number; pins: { x: number; y: number }[] };
+// `baseY` is the resting screen-Y of a card's anchor (its centre); each
+// connector offsets from it by the card's live carousel position.
+type Geo = { x1: number; baseY: number; pins: { x: number; y: number }[] };
 
 export default function MapJourney({ data }: { data: MapData }) {
   const reduce = useReducedMotion();
@@ -64,7 +71,7 @@ export default function MapJourney({ data }: { data: MapData }) {
   const outerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const mapWrapRef = useRef<HTMLDivElement>(null);
-  const cardFrameRef = useRef<HTMLDivElement>(null);
+  const cardColRef = useRef<HTMLDivElement>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [mapLeft, setMapLeft] = useState<number | null>(null);
 
@@ -84,9 +91,6 @@ export default function MapJourney({ data }: { data: MapData }) {
     const i = clamp(Math.round(v), 0, n - 1);
     setFocus((f) => (f === i ? f : i));
   });
-
-  // The card frame fades in as city 0 arrives, then stays put.
-  const frameOpacity = useTransform(t, [-0.85, -0.1], [0, 1]);
 
   // Wide layout: fit every pin between the card and the right edge, centered in
   // that space when there's room. Depends only on container size (not scroll),
@@ -124,34 +128,34 @@ export default function MapJourney({ data }: { data: MapData }) {
     return () => window.removeEventListener("resize", updatePosition);
   }, [reduce, wide, data]);
 
-  // Static line geometry: the frame anchor and every pin's screen position.
-  // Recomputed after layout (and when the map repositions), not on scroll.
+  // Static line geometry: the card anchor (edge + resting centre) and every
+  // pin's screen position. Recomputed after layout / map reposition, not on
+  // scroll — each connector then offsets baseY by its card's live position.
   useLayoutEffect(() => {
     if (reduce) return;
 
     const updateGeo = () => {
       const containerEl = stickyRef.current;
       const mapEl = mapWrapRef.current;
-      const frameEl = cardFrameRef.current;
-      if (!containerEl || !mapEl || !frameEl) return;
+      const colEl = cardColRef.current;
+      if (!containerEl || !mapEl || !colEl) return;
 
       const containerRect = containerEl.getBoundingClientRect();
       const mapRect = mapEl.getBoundingClientRect();
-      const frameRect = frameEl.getBoundingClientRect();
+      const colRect = colEl.getBoundingClientRect();
 
+      // Cards are inset horizontally from the column by CARD_INSET.
       const x1 = wide
-        ? frameRect.right - containerRect.left
-        : frameRect.left + frameRect.width / 2 - containerRect.left;
-      const y1 = wide
-        ? frameRect.top + frameRect.height / 2 - containerRect.top
-        : frameRect.top - containerRect.top;
+        ? colRect.right - CARD_INSET - containerRect.left
+        : colRect.left + colRect.width / 2 - containerRect.left;
+      const baseY = colRect.top + colRect.height / 2 - containerRect.top;
 
       const pins = data.pins.map((p) => ({
         x: mapRect.left + (p.x / data.vbW) * mapRect.width - containerRect.left,
         y: mapRect.top + (p.y / data.vbH) * mapRect.height - containerRect.top,
       }));
 
-      setGeo({ x1, y1, pins });
+      setGeo({ x1, baseY, pins });
     };
 
     updateGeo();
@@ -218,16 +222,22 @@ export default function MapJourney({ data }: { data: MapData }) {
   const connectors = geo ? (
     <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
       {geo.pins.map((pin, i) => (
-        <Connector key={data.pins[i].city} index={i} t={t} x1={geo.x1} y1={geo.y1} x2={pin.x} y2={pin.y} />
+        <Connector key={data.pins[i].city} index={i} t={t} x1={geo.x1} baseY={geo.baseY} x2={pin.x} y2={pin.y} />
       ))}
     </svg>
   ) : null;
 
-  const cardH = wide ? CARD_H_WIDE : CARD_H_NARROW;
   const cardStack = (
     <div className="absolute inset-0" style={{ maskImage: EDGE_FADE, WebkitMaskImage: EDGE_FADE }}>
       {hackathons.map((h, i) => (
-        <CityCard key={h.city} h={h} index={i} t={t} focused={focus === i} h_px={cardH} pad={wide ? "p-8" : "p-6"} />
+        <CityCard
+          key={h.city}
+          h={h}
+          index={i}
+          t={t}
+          focused={focus === i}
+          className={wide ? "left-10 right-10 p-8" : "left-6 right-6 p-6"}
+        />
       ))}
     </div>
   );
@@ -248,16 +258,11 @@ export default function MapJourney({ data }: { data: MapData }) {
           {mapWrap}
           {connectors}
           <div
-            className="absolute inset-y-0 left-0 z-20 flex items-center px-10"
+            ref={cardColRef}
+            className="absolute inset-y-0 left-0 z-20 overflow-hidden"
             style={{ width: CARD_WIDTH }}
           >
-            <motion.div
-              ref={cardFrameRef}
-              className="relative w-full overflow-hidden rounded-2xl border border-border bg-background-soft/80 shadow-sm backdrop-blur-sm"
-              style={{ opacity: frameOpacity, height: CARD_H_WIDE }}
-            >
-              {cardStack}
-            </motion.div>
+            {cardStack}
           </div>
           {progressDots}
         </div>
@@ -270,14 +275,12 @@ export default function MapJourney({ data }: { data: MapData }) {
     <div ref={outerRef} style={{ height: `${n * 55 + 25}vh` }} className="relative">
       <div ref={stickyRef} className="sticky top-0 w-full">
         <div className="relative h-[42vh] w-full overflow-hidden">{mapWrap}</div>
-        <div className="relative px-6 pb-8 pt-6">
-          <motion.div
-            ref={cardFrameRef}
-            className="relative overflow-hidden rounded-2xl border border-border bg-background-soft/80 shadow-sm backdrop-blur-sm"
-            style={{ opacity: frameOpacity, height: CARD_H_NARROW }}
-          >
-            {cardStack}
-          </motion.div>
+        <div
+          ref={cardColRef}
+          className="relative w-full overflow-hidden"
+          style={{ height: NARROW_VIEWPORT }}
+        >
+          {cardStack}
         </div>
         {connectors}
       </div>
@@ -285,31 +288,29 @@ export default function MapJourney({ data }: { data: MapData }) {
   );
 }
 
-/* One city's card riding the conveyor. Its vertical position is a pure function
-   of the scroll position: at `t === index` it sits in the window; as the scroll
-   advances it slides up and out the top while the next card rises from below.
-   Cards are fully opaque and the frame clips them, so text never overlaps and
-   you can freeze in any in-between state. */
+/* One location's card. Each city is its own separate bordered card; the cards
+   ride vertically like a carousel. A card's position is a pure function of the
+   scroll position: at `t === index` it sits centred; as the scroll advances it
+   slides up while the next card rises into place, and around the hand-off two
+   distinct cards share the screen. Fully scroll-linked and freezable. */
 function CityCard({
   h,
   index,
   t,
   focused,
-  h_px,
-  pad,
+  className,
 }: {
   h: (typeof hackathons)[number];
   index: number;
   t: MotionValue<number>;
   focused: boolean;
-  h_px: number;
-  pad: string;
+  className: string;
 }) {
-  const y = useTransform(t, (v) => (index - v) * h_px);
+  const y = useTransform(t, (v) => (index - v) * CARD_SPACING);
   return (
     <motion.div
-      className={`absolute inset-x-0 top-0 flex flex-col justify-center ${pad}`}
-      style={{ height: h_px, y, pointerEvents: focused ? "auto" : "none" }}
+      className={`absolute flex flex-col justify-center rounded-2xl border border-border bg-background-soft/80 shadow-sm backdrop-blur-sm ${className}`}
+      style={{ top: "50%", marginTop: -CARD_H / 2, height: CARD_H, y, pointerEvents: focused ? "auto" : "none" }}
       aria-hidden={focused ? undefined : true}
     >
       <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
@@ -361,24 +362,26 @@ function CityCard({
   );
 }
 
-/* Dotted line from the card frame to a city's pin. Its opacity tracks how close
-   the scroll is to that city, so during a transition the outgoing and incoming
-   lines are both drawn to their respective cities. */
+/* Dotted line from a location's card to its pin. It follows the card up the
+   carousel (y1 tracks the card's live position) and fades by how close the
+   scroll is to that city, so during a hand-off both cards' lines are drawn to
+   their respective cities. */
 function Connector({
   index,
   t,
   x1,
-  y1,
+  baseY,
   x2,
   y2,
 }: {
   index: number;
   t: MotionValue<number>;
   x1: number;
-  y1: number;
+  baseY: number;
   x2: number;
   y2: number;
 }) {
+  const y1 = useTransform(t, (v) => baseY + (index - v) * CARD_SPACING);
   const lineOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)) * 0.6);
   const dotOpacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)) * 0.9);
   return (
