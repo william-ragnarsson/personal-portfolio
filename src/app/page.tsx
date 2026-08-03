@@ -5,6 +5,7 @@ import PlugAndPlay from "@/components/sections/PlugAndPlay";
 import Hackathons from "@/components/sections/Hackathons";
 import OtherProjects from "@/components/sections/OtherProjects";
 import Hardware from "@/components/sections/Hardware";
+import WhatsNext from "@/components/sections/WhatsNext";
 import Contact from "@/components/sections/Contact";
 
 export default function Home() {
@@ -18,6 +19,7 @@ export default function Home() {
         <Hackathons />
         <OtherProjects />
         <Hardware />
+        <WhatsNext />
         <Contact />
       </main>
     </>
