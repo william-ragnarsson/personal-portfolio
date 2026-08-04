@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "generate:map": "node scripts/generate-map.mjs",
+    "predev": "npm run generate:map",
     "dev": "next dev",
+    "prebuild": "npm run generate:map",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
-    "dotted-map": "3.1.0",
     "framer-motion": "12.42.0",
     "next": "16.2.9",
     "posthog-js": "^1.404.1",
@@ -22,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotted-map": "3.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",

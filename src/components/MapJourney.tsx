@@ -10,7 +10,7 @@ import {
   type MotionValue,
 } from "framer-motion";
 import posthog from "posthog-js";
-import type { MapData } from "@/lib/hackathonMap";
+import { MAP_DOTS_SRC, type MapData } from "@/lib/hackathonMap";
 import { hackathons } from "@/data/content";
 import { ArrowUpRight, Github } from "@/components/ui/icons";
 
@@ -453,15 +453,30 @@ function Dot({ index, t }: { index: number; t: MotionValue<number> }) {
   );
 }
 
+/* The dot grid, as a static asset rather than inline markup.
+   It's ~12k <circle> elements; loading it through <img> keeps every one of them
+   inside the image's own isolated document, so the page never lays them out and
+   a resize costs nothing. Inline, it was ~2 MB of HTML and a full reflow of 12k
+   nodes on every resize event. Decorative — the pins carry the meaning. */
+function MapDots() {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- next/image can't optimize SVG, and a separate document is the whole point here
+    <img
+      src={MAP_DOTS_SRC}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+    />
+  );
+}
+
 /* Live map: pins light up progressively as the scroll passes them, and the
    nearest city gets the pulse — all driven by the continuous scroll position. */
 function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
   return (
     <>
-      <div
-        className="absolute inset-0 [&_svg]:block [&_svg]:h-full [&_svg]:w-full"
-        dangerouslySetInnerHTML={{ __html: data.dotsSvg }}
-      />
+      <MapDots />
       <svg
         viewBox={`0 0 ${data.vbW} ${data.vbH}`}
         preserveAspectRatio="xMidYMid meet"
@@ -498,10 +513,7 @@ function Pin({ p, index, t }: { p: MapData["pins"][number]; index: number; t: Mo
 function MapLayersStatic({ data, activeIndex }: { data: MapData; activeIndex: number }) {
   return (
     <>
-      <div
-        className="absolute inset-0 [&_svg]:block [&_svg]:h-full [&_svg]:w-full"
-        dangerouslySetInnerHTML={{ __html: data.dotsSvg }}
-      />
+      <MapDots />
       <svg
         viewBox={`0 0 ${data.vbW} ${data.vbH}`}
         preserveAspectRatio="xMidYMid meet"
