@@ -95,6 +95,14 @@ html {
   }
 }
 
+/* Coral halo on an award-winning city card. A static shadow faded with opacity
+   rather than an interpolated box-shadow, so it never repaints mid-scroll. */
+.card-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent-2) 45%, transparent),
+    0 12px 40px -12px color-mix(in srgb, var(--accent-2) 35%, transparent);
+}
+
 /* map dot pulse */
 @keyframes pulse-ring {
   0% {

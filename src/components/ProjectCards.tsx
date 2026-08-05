@@ -1,8 +1,6 @@
-"use client";
-
 import Image from "next/image";
-import posthog from "posthog-js";
 import Reveal from "@/components/Reveal";
+import TrackedLink, { external } from "@/components/ui/TrackedLink";
 import { projectCards } from "@/data/content";
 import { ArrowUpRight } from "@/components/ui/icons";
 
@@ -15,17 +13,15 @@ export default function ProjectCards() {
     <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
       {projectCards.map((project, i) => (
         <Reveal as="li" key={project.name} delay={0.05 * i}>
-          <a
+          <TrackedLink
             href={project.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              posthog.capture("project_clicked", {
-                project_name: project.name,
-                link_type: project.linkLabel === "Live demo" ? "demo" : "repo",
-                surface: "card",
-              })
-            }
+            {...external}
+            event="project_clicked"
+            properties={{
+              project_name: project.name,
+              link_type: project.linkLabel === "Live demo" ? "demo" : "repo",
+              surface: "card",
+            }}
             className="group flex h-full flex-col overflow-hidden rounded-md border border-border bg-background-soft shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
           >
             <div className="relative aspect-[16/10] overflow-hidden border-b border-border">
@@ -50,7 +46,7 @@ export default function ProjectCards() {
                 {project.linkLabel}
               </span>
             </div>
-          </a>
+          </TrackedLink>
         </Reveal>
       ))}
     </ul>

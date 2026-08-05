@@ -16,7 +16,6 @@ export default function TuneboxGallery() {
           mobileAspect="aspect-[4/3]"
           className="sm:col-span-2 sm:row-span-2"
           sizes="(min-width: 640px) 540px, 100vw"
-          priority
         />
         <Tile
           src="/images/tunebox/pitch.jpg"
@@ -45,14 +44,12 @@ function Tile({
   mobileAspect,
   className = "",
   sizes,
-  priority = false,
 }: {
   src: string;
   alt: string;
   mobileAspect: string;
   className?: string;
   sizes: string;
-  priority?: boolean;
 }) {
   return (
     <div
@@ -63,7 +60,6 @@ function Tile({
         alt={alt}
         fill
         sizes={sizes}
-        priority={priority}
         className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
       />
     </div>

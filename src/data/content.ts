@@ -1,6 +1,6 @@
 // All editable copy + data for the narrative page.
 
-export type Hackathon = {
+type HackathonBase = {
   city: string;
   country: string;
   event: string;
@@ -11,10 +11,19 @@ export type Hackathon = {
   lng: number;
   repo?: string;
   link?: string;
-  // Having a screenshot promotes the project to a card in section 03.
-  image?: string;
-  imageAlt?: string;
 };
+
+// Having a screenshot promotes the project to a card in section 03, and a card
+// has to link somewhere. Expressing that as a union makes it a type error at
+// author time rather than an exception thrown while the module evaluates —
+// which previously meant a data typo failed the build with a stack trace.
+type Illustrated = { image: string; imageAlt?: string } & (
+  | { repo: string }
+  | { link: string }
+);
+
+export type Hackathon = HackathonBase &
+  (Illustrated | { image?: never; imageAlt?: never });
 
 // Order = the travel order the map pans through.
 export const hackathons: Hackathon[] = [
@@ -109,21 +118,23 @@ export const projectCards: ProjectCard[] = [
     href: "https://github.com/william-ragnarsson/finance-tracker",
     linkLabel: "GitHub",
   },
-  ...hackathons
-    .filter((hackathon) => hackathon.image)
-    .map((hackathon): ProjectCard => {
-      const href = hackathon.link ?? hackathon.repo;
-      if (!href) {
-        throw new Error(`${hackathon.project} has a screenshot but no link`);
-      }
-      return {
-        name: hackathon.project,
-        blurb: hackathon.blurb,
-        image: hackathon.image!,
-        imageAlt: hackathon.imageAlt ?? `${hackathon.project} screenshot`,
+  // The `Hackathon` union already makes "screenshot without a link" a type
+  // error, so the checks here only exist to narrow the optional fields — they
+  // can't actually fail. Skipping rather than throwing keeps a data mistake
+  // from taking the whole build down with it.
+  ...hackathons.flatMap((h): ProjectCard[] => {
+    const href = h.link ?? h.repo;
+    if (!h.image || !href) return [];
+    return [
+      {
+        name: h.project,
+        blurb: h.blurb,
+        image: h.image,
+        imageAlt: h.imageAlt ?? `${h.project} screenshot`,
         href,
-        linkLabel: hackathon.link ? "Live demo" : "GitHub",
-      };
-    }),
+        linkLabel: h.link ? "Live demo" : "GitHub",
+      },
+    ];
+  }),
 ];
 

@@ -9,15 +9,18 @@ import {
   useTransform,
   type MotionValue,
 } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { MAP_DOTS_SRC, type MapData } from "@/lib/hackathonMap";
 import { isWideViewport } from "@/lib/breakpoints";
 import { useResizeEffect } from "@/hooks/useResizeEffect";
 import { hackathons } from "@/data/content";
 import { ArrowUpRight, Github } from "@/components/ui/icons";
 
-const BLUE = "#2b5cff";
-const CORAL = "#ff5a4d";
+// The design tokens from globals.css, not copies of them. SVG `fill`/`stroke`
+// resolve CSS variables just like any other property, so the map can't drift
+// out of step with the rest of the palette.
+const BLUE = "var(--accent)";
+const CORAL = "var(--accent-2)";
 
 // Wide layout: the card floats over the map at a fixed width. The map is
 // positioned so all pins stay visible between the card and the right edge,
@@ -211,7 +214,7 @@ export default function MapJourney({ data }: { data: MapData }) {
                     className="text-muted transition-colors hover:text-accent"
                     aria-label={`${h.project} on GitHub`}
                     onClick={() =>
-                      posthog.capture("hackathon_repo_clicked", {
+                      capture("hackathon_repo_clicked", {
                         hackathon_event: h.event,
                         hackathon_city: h.city,
                         project_name: h.project,
@@ -367,7 +370,7 @@ function CityCard({
           // string itself repainted the card on every scroll frame.
           <motion.span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-2xl shadow-[0_0_0_1px_rgba(255,90,77,0.45),0_12px_40px_-12px_rgba(255,90,77,0.35)]"
+            className="card-glow pointer-events-none absolute inset-0 rounded-2xl"
             style={{ opacity: glowOpacity }}
           />
         ) : null}
@@ -396,7 +399,7 @@ function CityCard({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
               onClick={() =>
-                posthog.capture("hackathon_repo_clicked", {
+                capture("hackathon_repo_clicked", {
                   hackathon_event: h.event,
                   hackathon_city: h.city,
                   project_name: h.project,
@@ -413,7 +416,7 @@ function CityCard({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-accent"
               onClick={() =>
-                posthog.capture("hackathon_link_clicked", {
+                capture("hackathon_link_clicked", {
                   hackathon_event: h.event,
                   hackathon_city: h.city,
                   project_name: h.project,
@@ -475,7 +478,7 @@ function Dot({ index, t }: { index: number; t: MotionValue<number> }) {
   const opacity = useTransform(t, (v) => clamp(v - index + 0.5));
   return (
     <span className="relative h-1.5 w-1.5">
-      <span className="absolute inset-0 rounded-full" style={{ background: "rgba(22,21,15,0.18)" }} />
+      <span className="absolute inset-0 rounded-full bg-ink/20" />
       <motion.span className="absolute inset-0 rounded-full" style={{ background: CORAL, opacity }} />
     </span>
   );

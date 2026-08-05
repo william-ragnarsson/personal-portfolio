@@ -1,18 +1,16 @@
-"use client";
-
-import posthog from "posthog-js";
 import Reveal from "@/components/Reveal";
+import TrackedLink, { external } from "@/components/ui/TrackedLink";
 import { site } from "@/data/site";
 import { ArrowUpRight, Github } from "@/components/ui/icons";
 
 function PreviewCard() {
   return (
-    <a
+    <TrackedLink
       href={site.vcDemo}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...external}
+      event="vc_analyst_demo_clicked"
+      properties={{ source: "card" }}
       className="group block overflow-hidden rounded-2xl border border-border bg-background-soft shadow-sm transition-transform hover:-translate-y-0.5"
-      onClick={() => posthog.capture("vc_analyst_demo_clicked", { source: "card" })}
     >
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
         <span className="flex items-center gap-1.5 truncate font-mono text-xs text-muted">
@@ -36,7 +34,7 @@ function PreviewCard() {
           className="pointer-events-none absolute left-0 top-0 h-[200%] w-[200%] origin-top-left scale-50 border-0"
         />
       </div>
-    </a>
+    </TrackedLink>
   );
 }
 
@@ -52,24 +50,23 @@ export default function VcPreviewSpotlight() {
 function PreviewLinks() {
   return (
     <div className="mt-4 flex flex-wrap gap-5 text-sm">
-      <a
+      <TrackedLink
         href={site.vcDemo}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...external}
+        event="vc_analyst_demo_clicked"
+        properties={{ source: "try_it_out" }}
         className="inline-flex items-center gap-1 font-medium transition-colors hover:text-accent"
-        onClick={() => posthog.capture("vc_analyst_demo_clicked", { source: "try_it_out" })}
       >
         Try it out yourself <ArrowUpRight className="h-4 w-4" />
-      </a>
-      <a
+      </TrackedLink>
+      <TrackedLink
         href={site.vcRepo}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...external}
+        event="vc_analyst_repo_clicked"
         className="inline-flex items-center gap-1.5 text-muted transition-colors hover:text-foreground"
-        onClick={() => posthog.capture("vc_analyst_repo_clicked")}
       >
         <Github className="h-4 w-4" /> Source
-      </a>
+      </TrackedLink>
     </div>
   );
 }
