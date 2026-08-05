@@ -73,7 +73,7 @@ export default function Contact() {
 
   if (reduce) {
     return (
-      <section className="flex min-h-screen flex-col justify-center py-24">
+      <section className="flex min-h-[100dvh] flex-col justify-center py-24">
         <div className="mx-auto w-full max-w-[1100px] px-6 text-center">
           <Panel />
         </div>
@@ -82,8 +82,8 @@ export default function Contact() {
   }
 
   return (
-    <section ref={ref} className="relative h-[170vh]">
-      <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
+    <section ref={ref} className="relative h-[170dvh]">
+      <div className="sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden">
         <motion.div
           className="mx-auto w-full max-w-[1100px] px-6 text-center"
           style={{ opacity, y, scale }}
