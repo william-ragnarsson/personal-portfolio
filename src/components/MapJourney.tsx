@@ -510,7 +510,7 @@ function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 h-full w-full"
       >
-        <MapGlowDef />
+        <MapDefs />
         {data.pins.map((p, i) => (
           <Pin key={p.city} p={p} index={i} t={t} />
         ))}
@@ -519,19 +519,35 @@ function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
   );
 }
 
+// Base radius of the coral dot. It scales rather than growing its `r`, because
+// `r` is a geometry attribute: changing it re-runs SVG layout every frame,
+// while a transform is compositor work. Same reason the halo below is a
+// gradient and not a blur filter.
+const PIN_R = 1.6;
+const PIN_R_MIN = 1.15;
+
 function Pin({ p, index, t }: { p: MapData["pins"][number]; index: number; t: MotionValue<number> }) {
+  const near = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
   const coralOpacity = useTransform(t, (v) => clamp(v - index + 0.5));
-  const r = useTransform(t, (v) => 1.15 + 0.45 * clamp(1 - Math.abs(v - index)));
-  // The pulse keyframe animates its own opacity, so gate visibility with the
-  // wrapping group — only the pin nearest the scroll position pulses.
-  const pulseGate = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  const scale = useTransform(near, (v) => (PIN_R_MIN + 0.45 * v) / PIN_R);
+  const haloOpacity = useTransform(near, [0, 1], [0.35, 1]);
+  const spin = { transformBox: "fill-box", transformOrigin: "center" } as const;
   return (
-    <g filter="url(#mapglow)">
-      <motion.g opacity={pulseGate}>
+    <g>
+      <motion.circle cx={p.x} cy={p.y} r={5} fill="url(#pinglow)" style={{ opacity: haloOpacity }} />
+      {/* The pulse keyframe animates its own opacity, so gate visibility with
+          the wrapping group — only the pin nearest the scroll pulses. */}
+      <motion.g style={{ opacity: near }}>
         <circle cx={p.x} cy={p.y} r={1.9} fill={CORAL} className="pulse-ring" />
       </motion.g>
-      <circle cx={p.x} cy={p.y} r={1.15} fill={BLUE} />
-      <motion.circle cx={p.x} cy={p.y} r={r} fill={CORAL} opacity={coralOpacity} />
+      <circle cx={p.x} cy={p.y} r={PIN_R_MIN} fill={BLUE} />
+      <motion.circle
+        cx={p.x}
+        cy={p.y}
+        r={PIN_R}
+        fill={CORAL}
+        style={{ opacity: coralOpacity, scale, ...spin }}
+      />
       <circle cx={p.x} cy={p.y} r={0.4} fill="#fff" opacity={0.9} />
     </g>
   );
@@ -547,12 +563,13 @@ function MapLayersStatic({ data, activeIndex }: { data: MapData; activeIndex: nu
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 h-full w-full"
       >
-        <MapGlowDef />
+        <MapDefs />
         {data.pins.map((p, i) => {
           const lit = i <= activeIndex;
           return (
-            <g key={p.city} filter="url(#mapglow)">
-              <circle cx={p.x} cy={p.y} r={1.15} fill={lit ? CORAL : BLUE} />
+            <g key={p.city}>
+              {lit ? <circle cx={p.x} cy={p.y} r={5} fill="url(#pinglow)" /> : null}
+              <circle cx={p.x} cy={p.y} r={PIN_R_MIN} fill={lit ? CORAL : BLUE} />
               <circle cx={p.x} cy={p.y} r={0.4} fill="#fff" opacity={0.9} />
             </g>
           );
@@ -562,16 +579,18 @@ function MapLayersStatic({ data, activeIndex }: { data: MapData; activeIndex: nu
   );
 }
 
-function MapGlowDef() {
+/* The pin halo. This used to be an feGaussianBlur filter applied per pin, with
+   a 500%-of-bounds filter region — so every pin allocated its own offscreen
+   buffer and re-blurred it on each scroll frame as the pin animated. A radial
+   gradient paints the same soft falloff with no filter pass at all. */
+function MapDefs() {
   return (
     <defs>
-      <filter id="mapglow" x="-200%" y="-200%" width="500%" height="500%">
-        <feGaussianBlur stdDeviation="0.6" result="b" />
-        <feMerge>
-          <feMergeNode in="b" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
+      <radialGradient id="pinglow">
+        <stop offset="0%" stopColor={CORAL} stopOpacity="0.5" />
+        <stop offset="45%" stopColor={CORAL} stopOpacity="0.16" />
+        <stop offset="100%" stopColor={CORAL} stopOpacity="0" />
+      </radialGradient>
     </defs>
   );
 }
