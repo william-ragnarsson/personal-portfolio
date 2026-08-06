@@ -19,6 +19,12 @@ import { useLayoutEffect, useRef } from "react";
 export function useResizeEffect(
   measure: () => void,
   getTargets: () => (Element | null | undefined)[],
+  // Pass a dependency when the targets can be swapped out during the
+  // component's life — e.g. a layout that renders a different tree above and
+  // below a breakpoint. The observer is torn down and re-established, and
+  // `measure` re-runs against the elements that are actually mounted now.
+  // Leave it empty when the refs live for the component's lifetime.
+  deps: unknown[] = [],
 ) {
   // Held in a ref so a new inline callback each render doesn't tear down and
   // re-create the observer. Declared before the setup effect below, so it has
@@ -50,7 +56,9 @@ export function useResizeEffect(
       if (frame) cancelAnimationFrame(frame);
       observer.disconnect();
     };
-    // Targets are refs held for the component's lifetime; observing once on
+    // Re-observes only when `deps` change. With the default empty array the
+    // targets are refs held for the component's lifetime, so observing once on
     // mount is correct and avoids tearing down the observer on every render.
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps are the caller's by design
+  }, deps);
 }

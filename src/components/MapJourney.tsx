@@ -340,6 +340,11 @@ export default function MapJourney({ data }: { data: MapData }) {
       );
     },
     () => [stickyRef.current, mapRegionRef.current, cardColRef.current, ...cardRefs.current],
+    // The narrow deck and the wide carousel are different trees, so these
+    // elements only exist while `wide` is true. Without re-observing on the
+    // switch, the pass would run once at mount against nulls and never again —
+    // leaving the map pinned at left: 0 and the connector lines undrawn.
+    [wide],
   );
 
   // ── reduced motion: whole world + list (accessible fallback) ──
