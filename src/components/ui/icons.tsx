@@ -32,6 +32,28 @@ export function Github({ className }: IconProps) {
   );
 }
 
+export function Trophy({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+      <path d="M7 6H4v1a4 4 0 0 0 3.4 3.95" />
+      <path d="M17 6h3v1a4 4 0 0 1-3.4 3.95" />
+      <path d="M12 14v3" />
+      <path d="M9 20h6" />
+      <path d="M10 17h4l1 3H9l1-3Z" />
+    </svg>
+  );
+}
+
 export function ChevronLeft({ className }: IconProps) {
   return (
     <svg
