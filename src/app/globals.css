@@ -72,6 +72,37 @@ html {
   text-transform: uppercase;
 }
 
+/* Scroll reveal. The hidden state is server-rendered (data-visible="false"),
+   so there's no flash of visible content before the observer runs; the
+   <noscript> block in layout.tsx un-hides everything when JS is unavailable.
+   Only opacity and transform animate, both compositor properties. */
+.reveal {
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal[data-visible="false"] {
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal[data-visible="false"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Coral halo on an award-winning city card. A static shadow faded with opacity
+   rather than an interpolated box-shadow, so it never repaints mid-scroll. */
+.card-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent-2) 45%, transparent),
+    0 12px 40px -12px color-mix(in srgb, var(--accent-2) 35%, transparent);
+}
+
 /* map dot pulse */
 @keyframes pulse-ring {
   0% {

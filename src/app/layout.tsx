@@ -65,6 +65,11 @@ export default function RootLayout({
       className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
+        {/* Reveal elements start hidden so they can animate in; without JS
+            there's no observer to un-hide them, so do it here. */}
+        <noscript>
+          <style>{`.reveal[data-visible="false"]{opacity:1;transform:none}`}</style>
+        </noscript>
         {children}
         <Analytics />
       </body>

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import posthog from "posthog-js";
+import { capture } from "@/lib/analytics";
 import { site } from "@/data/site";
 import { ArrowUpRight, Linkedin, Mail } from "@/components/ui/icons";
 
@@ -22,7 +22,7 @@ function Panel() {
         <a
           href={`mailto:${site.email}`}
           className={`${CTA_BASE} bg-accent-2 text-background shadow-[0_10px_30px_rgba(255,90,77,0.28)] hover:shadow-[0_14px_36px_rgba(255,90,77,0.36)]`}
-          onClick={() => posthog.capture("contact_link_clicked", { link_type: "email" })}
+          onClick={() => capture("contact_link_clicked", { link_type: "email" })}
         >
           <Mail className="h-5 w-5" />
           Send me an email
@@ -34,7 +34,7 @@ function Panel() {
           target="_blank"
           rel="noopener noreferrer"
           className={`${CTA_BASE} border border-border text-foreground hover:border-ink`}
-          onClick={() => posthog.capture("contact_link_clicked", { link_type: "linkedin" })}
+          onClick={() => capture("contact_link_clicked", { link_type: "linkedin" })}
         >
           <Linkedin className="h-5 w-5" />
           Connect on LinkedIn
@@ -46,7 +46,7 @@ function Panel() {
         <a
           href={`mailto:${site.email}`}
           className="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-accent-2"
-          onClick={() => posthog.capture("contact_link_clicked", { link_type: "email_inline" })}
+          onClick={() => capture("contact_link_clicked", { link_type: "email_inline" })}
         >
           {site.email}
         </a>
@@ -73,7 +73,7 @@ export default function Contact() {
 
   if (reduce) {
     return (
-      <section className="flex min-h-screen flex-col justify-center py-24">
+      <section className="flex min-h-[100dvh] flex-col justify-center py-24">
         <div className="mx-auto w-full max-w-[1100px] px-6 text-center">
           <Panel />
         </div>
@@ -82,8 +82,8 @@ export default function Contact() {
   }
 
   return (
-    <section ref={ref} className="relative h-[170vh]">
-      <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
+    <section ref={ref} className="relative h-[170dvh]">
+      <div className="sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden">
         <motion.div
           className="mx-auto w-full max-w-[1100px] px-6 text-center"
           style={{ opacity, y, scale }}

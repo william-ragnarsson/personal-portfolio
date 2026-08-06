@@ -1,9 +1,16 @@
-import posthog from "posthog-js";
+import { load } from "@/lib/analytics";
 
-posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
-  api_host: "/ingest",
-  ui_host: "https://eu.posthog.com",
-  defaults: "2026-01-30",
-  capture_exceptions: true,
-  debug: process.env.NODE_ENV === "development",
-});
+// Analytics isn't worth competing with hydration for bandwidth or main-thread
+// time, so the posthog-js chunk is fetched once the browser goes idle.
+// `capture()` awaits the same memoised promise, so a click that lands before
+// then pulls the load forward rather than losing the event.
+//
+// Trade-off: `capture_exceptions` only starts catching once this resolves, so
+// an exception in the first second or two of page life won't be reported.
+if (typeof window !== "undefined") {
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(() => void load(), { timeout: 4000 });
+  } else {
+    setTimeout(() => void load(), 2000);
+  }
+}
