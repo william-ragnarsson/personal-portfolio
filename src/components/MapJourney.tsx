@@ -125,6 +125,12 @@ type Geo = { x1: number; baseY: number; pins: { x: number; y: number }[] };
 
 type Metrics = { cardH: number; mapLeft: number; geo: Geo | null };
 
+// The deck's equivalent of `Geo`. The carousel's cards move vertically past a
+// fixed anchor, so its connectors vary `y1`; the deck's move horizontally, so
+// these vary `x1` instead. `baseX` is the resting screen-X of the focused
+// card's centre and `y1` its top edge — the line hangs from there up to the pin.
+type DeckGeo = { baseX: number; y1: number; step: number; pins: { x: number; y: number }[] };
+
 const INITIAL_METRICS: Metrics = {
   cardH: FALLBACK_CARD_H,
   mapLeft: 0,
@@ -142,12 +148,14 @@ export default function MapJourney({ data }: { data: MapData }) {
   const cardColRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const deckRef = useRef<HTMLDivElement>(null);
+  const narrowMapRef = useRef<HTMLDivElement>(null);
 
   // One state object, committed by one measurement pass. Previously `mapLeft`
   // and `geo` lived in separate effects where geo depended on mapLeft, so every
   // resize cost two layout passes and painted a frame with the map and its
   // connector lines disagreeing.
   const [{ cardH, mapLeft, geo }, setMetrics] = useState<Metrics>(INITIAL_METRICS);
+  const [deckGeo, setDeckGeo] = useState<DeckGeo | null>(null);
 
   const spacing = cardH + CARD_GAP_Y;
   const travel = (n - 1 + LEAD_IN) * spacing;
@@ -347,6 +355,44 @@ export default function MapJourney({ data }: { data: MapData }) {
     [wide],
   );
 
+  // The same idea for the deck: one pass, all reads, one commit. Nothing here
+  // depends on the scroll position — the connectors offset from `baseX` by the
+  // deck's live position, so this only re-runs when something actually resizes.
+  useResizeEffect(
+    () => {
+      const rootEl = outerRef.current;
+      const mapEl = narrowMapRef.current;
+      const deckEl = deckRef.current;
+      if (!rootEl || !mapEl || !deckEl) return;
+
+      const rootRect = rootEl.getBoundingClientRect();
+      const mapRect = mapEl.getBoundingClientRect();
+      const deckRect = deckEl.getBoundingClientRect();
+
+      const step = deckStep(deckEl);
+      // Cards snap centred, so the focused card's centre is the deck's centre.
+      const baseX = deckRect.left - rootRect.left + deckRect.width / 2;
+      const y1 = deckRect.top - rootRect.top;
+      const pins = data.pins.map((p) => ({
+        x: mapRect.left - rootRect.left + (p.x / data.vbW) * mapRect.width,
+        y: mapRect.top - rootRect.top + (p.y / data.vbH) * mapRect.height,
+      }));
+
+      setDeckGeo((prev) =>
+        prev &&
+        prev.baseX === baseX &&
+        prev.y1 === y1 &&
+        prev.step === step &&
+        prev.pins[0]?.x === pins[0]?.x &&
+        prev.pins[0]?.y === pins[0]?.y
+          ? prev
+          : { baseX, y1, step, pins },
+      );
+    },
+    () => [outerRef.current, narrowMapRef.current, deckRef.current],
+    [wide],
+  );
+
   // ── reduced motion: whole world + list (accessible fallback) ──
   if (reduce) {
     return (
@@ -403,11 +449,12 @@ export default function MapJourney({ data }: { data: MapData }) {
     return (
       // `outerRef` stays attached even though nothing here is scroll-linked, so
       // the shared `useScroll` above always has a mounted target to measure.
-      <div ref={outerRef}>
+      <div ref={outerRef} className="relative">
         {/* The whole map, contained and centred — no crop, so it floats on the
             paper background instead of sitting in a box with cut-off edges. */}
         <div className="px-6">
           <div
+            ref={narrowMapRef}
             className="relative mx-auto w-full"
             style={{ maxWidth: NARROW_MAP_MAX_W, aspectRatio: `${data.vbW} / ${data.vbH}` }}
           >
@@ -415,12 +462,29 @@ export default function MapJourney({ data }: { data: MapData }) {
           </div>
         </div>
 
+        {deckGeo ? (
+          <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
+            {deckGeo.pins.map((pin, i) => (
+              <DeckConnector
+                key={data.pins[i].city}
+                index={i}
+                t={t}
+                step={deckGeo.step}
+                baseX={deckGeo.baseX}
+                y1={deckGeo.y1}
+                x2={pin.x}
+                y2={pin.y}
+              />
+            ))}
+          </svg>
+        ) : null}
+
         <div
           ref={deckRef}
           role="region"
           aria-label="Hackathon cities"
           style={{ paddingInline: DECK_PAD }}
-          className="mt-6 flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="relative z-20 mt-6 flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {hackathons.map((h, i) => (
             <DeckCard key={h.city} h={h} index={i} t={t} />
@@ -757,6 +821,47 @@ function Connector({
   y2: number;
 }) {
   const y1 = useTransform(t, (v) => baseY + (index - v) * spacing);
+  const opacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  return (
+    <g>
+      <motion.line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={CORAL}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeDasharray="1 6"
+        opacity={opacity}
+      />
+      <motion.circle cx={x2} cy={y2} r={4} fill={CORAL} opacity={opacity} />
+    </g>
+  );
+}
+
+/* The deck's connector. Same dotted thread and the same fade by scroll
+   proximity as the carousel's, but hung from the focused card's top edge: the
+   deck's cards travel horizontally, so `x1` tracks the live position where
+   `Connector` tracks `y1`. */
+function DeckConnector({
+  index,
+  t,
+  step,
+  baseX,
+  y1,
+  x2,
+  y2,
+}: {
+  index: number;
+  t: MotionValue<number>;
+  step: number;
+  baseX: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}) {
+  const x1 = useTransform(t, (v) => baseX + (index - v) * step);
   const opacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
   return (
     <g>
