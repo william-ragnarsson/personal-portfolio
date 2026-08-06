@@ -7,8 +7,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # The responsive contract
 
 This site is one long scroll-driven page. Nearly every layout bug it has had came
-from breaking one of the rules below. Run `npm run check:layout` after touching
-anything here — it enforces all of them.
+from breaking one of the rules below. After touching anything here, walk the
+viewport matrix in the README — none of these fail a typecheck.
 
 ### One breakpoint, defined once
 

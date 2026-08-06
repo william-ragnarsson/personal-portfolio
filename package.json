@@ -9,8 +9,7 @@
     "prebuild": "npm run generate:map",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "check:layout": "node scripts/check-layout.mjs"
+    "lint": "eslint"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

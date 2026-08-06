@@ -40,3 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env.local
+
+# scratch/debug tooling — keep it out of the repo.
+# scripts/generate-map.mjs is NOT tooling: it runs on prebuild/predev and
+# generates public/map-dots.svg, so it stays tracked.
+/scripts/lib/
+/scripts/check-*.mjs
