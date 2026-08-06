@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   motion,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -11,10 +12,10 @@ import {
 } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { MAP_DOTS_SRC, type MapData } from "@/lib/hackathonMap";
-import { isWideViewport } from "@/lib/breakpoints";
+import { WIDE_QUERY, isWideViewport } from "@/lib/breakpoints";
 import { useResizeEffect } from "@/hooks/useResizeEffect";
 import { hackathons } from "@/data/content";
-import { ArrowUpRight, Github } from "@/components/ui/icons";
+import { ArrowUpRight, Github, Trophy } from "@/components/ui/icons";
 
 // The design tokens from globals.css, not copies of them. SVG `fill`/`stroke`
 // resolve CSS variables just like any other property, so the map can't drift
@@ -57,6 +58,31 @@ const CARD_PEEK = 56;
 // Fallbacks used for the very first paint, before the cards have been measured.
 const FALLBACK_CARD_H = 300;
 
+// Height of the full-bleed coral banner an awarded city wears across the top of
+// its card. The card's own height is measured, so this needs no compensating
+// arithmetic anywhere — it just makes those cards taller.
+const AWARD_BANNER_H = 52;
+
+// ── Narrow: a horizontal swipe deck instead of the vertical carousel ──
+// Below `md:` the section drops the scroll-jacking entirely: the whole world
+// scaled down to fit (uncropped, so the map has no hard edges), above a
+// snap-scrolling deck of cards driven by its own sideways scroll offset.
+const NARROW_MAP_MAX_W = 400;
+const NARROW_BANNER_H = 44;
+// Deck cards are a fraction of the viewport so the next one peeks. The
+// scroller's side padding has to be at least half the leftover space, or a
+// centre-snapped first and last card can never reach their snap position: the
+// deck jams short of the end, and the browser's mandatory snapping oscillates
+// forever trying to settle somewhere it can't reach. With this padding the
+// maximum scroll offset lands exactly on the last card's snap point — plus a
+// pixel, so it stays strictly reachable once subpixel widths are rounded.
+const DECK_CARD_W = "min(86vw, 400px)";
+const DECK_PAD = `max(1.5rem, calc((100vw - ${DECK_CARD_W}) / 2 + 1px))`;
+// Shrinking the map shrinks its pins with it (they're drawn in viewBox units),
+// so scale them back up to stay legible. Held below ~1.6: Berlin and Stockholm
+// land about 8px apart at phone width, and bigger pins merge into one blob.
+const NARROW_PIN_SCALE = 1.5;
+
 // Softens cards as they enter/leave the top and bottom of the carousel window.
 // The fade depth is a CSS variable rather than a fixed percentage: wide gets a
 // generous 14% of a full-height column, while the narrow window is only ~350px
@@ -66,12 +92,44 @@ const EDGE_FADE =
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
+/* Distance between two consecutive deck cards, i.e. how far the deck scrolls to
+   advance one city. Measured off live rects, so it holds whatever the clamped
+   `DECK_CARD_W` actually resolved to and is unaffected by how far the deck is
+   currently scrolled. */
+function deckStep(el: HTMLElement) {
+  const a = el.children[0];
+  const b = el.children[1];
+  if (!a || !b) return 0;
+  return b.getBoundingClientRect().left - a.getBoundingClientRect().left;
+}
+
+/* Reactive form of `isWideViewport`. The measurement pass can read the media
+   query on demand, but choosing which layout to render needs it as state. Same
+   `WIDE_QUERY`, so the two can't drift. */
+function useWide() {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(WIDE_QUERY);
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return wide;
+}
+
 // Screen geometry (in sticky-container coordinates) for drawing connector
 // lines. `baseY` is the resting screen-Y of a card's anchor (its centre); each
 // connector offsets from it by the card's live carousel position.
 type Geo = { x1: number; baseY: number; pins: { x: number; y: number }[] };
 
 type Metrics = { cardH: number; mapLeft: number; geo: Geo | null };
+
+// The deck's equivalent of `Geo`. The carousel's cards move vertically past a
+// fixed anchor, so its connectors vary `y1`; the deck's move horizontally, so
+// these vary `x1` instead. `baseX` is the resting screen-X of the focused
+// card's centre and `y1` its top edge — the line hangs from there up to the pin.
+type DeckGeo = { baseX: number; y1: number; step: number; pins: { x: number; y: number }[] };
 
 const INITIAL_METRICS: Metrics = {
   cardH: FALLBACK_CARD_H,
@@ -81,6 +139,7 @@ const INITIAL_METRICS: Metrics = {
 
 export default function MapJourney({ data }: { data: MapData }) {
   const reduce = useReducedMotion();
+  const wide = useWide();
   const n = data.pins.length;
 
   const outerRef = useRef<HTMLDivElement>(null);
@@ -88,12 +147,15 @@ export default function MapJourney({ data }: { data: MapData }) {
   const mapRegionRef = useRef<HTMLDivElement>(null);
   const cardColRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const deckRef = useRef<HTMLDivElement>(null);
+  const narrowMapRef = useRef<HTMLDivElement>(null);
 
   // One state object, committed by one measurement pass. Previously `mapLeft`
   // and `geo` lived in separate effects where geo depended on mapLeft, so every
   // resize cost two layout passes and painted a frame with the map and its
   // connector lines disagreeing.
   const [{ cardH, mapLeft, geo }, setMetrics] = useState<Metrics>(INITIAL_METRICS);
+  const [deckGeo, setDeckGeo] = useState<DeckGeo | null>(null);
 
   const spacing = cardH + CARD_GAP_Y;
   const travel = (n - 1 + LEAD_IN) * spacing;
@@ -105,15 +167,117 @@ export default function MapJourney({ data }: { data: MapData }) {
     target: outerRef,
     offset: ["start start", "end end"],
   });
-  const t = useTransform(scrollYProgress, [0, 1], [-LEAD_IN, Math.max(0, n - 1)]);
+  const scrollT = useTransform(scrollYProgress, [0, 1], [-LEAD_IN, Math.max(0, n - 1)]);
+
+  // The narrow deck produces the same journey position from its own horizontal
+  // scroll offset, so the map, pins and progress dots are driven by one value in
+  // both layouts and need no branching of their own.
+  const deckT = useMotionValue(0);
+  const t = wide ? scrollT : deckT;
 
   // Rounded index, updated only when it flips — for the few things that need
-  // real React state (pointer-events / aria on the focused card).
+  // real React state (pointer-events / aria on the focused card). Wide only:
+  // the deck's cards are all live and visible, so re-rendering the section as
+  // the deck scrolls would be pure churn.
   const [focus, setFocus] = useState(0);
   useMotionValueEvent(t, "change", (v) => {
+    if (!wide) return;
     const i = clamp(Math.round(v), 0, n - 1);
     setFocus((f) => (f === i ? f : i));
   });
+
+  // Keep the journey position in sync with the deck's own scroll offset, so the
+  // map pins and progress dots track a sideways swipe exactly as they track the
+  // vertical scroll on wide. A native passive listener rather than React's
+  // `onScroll`: it fires for momentum and programmatic scrolling alike.
+  useEffect(() => {
+    const el = deckRef.current;
+    if (!el || wide || reduce) return;
+
+    const sync = () => {
+      const step = deckStep(el);
+      if (step > 0) deckT.set(el.scrollLeft / step);
+    };
+
+    sync();
+    el.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    return () => {
+      el.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [wide, reduce, deckT]);
+
+  // Drag the deck with a mouse. A native horizontal scroller only answers to
+  // wheel and trackpad gestures, so on a desktop pointer the deck looks stuck.
+  // Mouse only — touch keeps the browser's own momentum and snapping.
+  useEffect(() => {
+    const el = deckRef.current;
+    if (!el || wide || reduce) return;
+
+    let startX = 0;
+    let startScroll = 0;
+    let active = false;
+    let dragged = false;
+
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      active = true;
+      dragged = false;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+    };
+
+    const move = (e: PointerEvent) => {
+      if (!active) return;
+      const dx = e.clientX - startX;
+      // Swallow the first few pixels so a click on a link stays a click.
+      if (!dragged) {
+        if (Math.abs(dx) < 4) return;
+        dragged = true;
+        // Mandatory snapping fights a hand-driven scroll; restored on release.
+        el.style.scrollSnapType = "none";
+        el.style.userSelect = "none";
+        el.setPointerCapture(e.pointerId);
+      }
+      el.scrollLeft = startScroll - dx;
+    };
+
+    const up = (e: PointerEvent) => {
+      if (!active) return;
+      active = false;
+      if (!dragged) return;
+      el.style.userSelect = "";
+      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+      // Hand the deck back to the browser on the next frame and let its own
+      // snapping settle it. Driving a smooth `scrollTo` here instead fights the
+      // mandatory snap being re-enabled, and the two oscillate.
+      requestAnimationFrame(() => {
+        el.style.scrollSnapType = "";
+      });
+    };
+
+    // A drag that happens to end on a link must not also open it.
+    const click = (e: MouseEvent) => {
+      if (!dragged) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragged = false;
+    };
+
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("click", click, true);
+    return () => {
+      el.removeEventListener("pointerdown", down);
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      el.removeEventListener("click", click, true);
+    };
+  }, [wide, reduce]);
 
   // The single measurement pass. Reads layout, derives everything analytically,
   // commits once. Note it never reads the map element's own rect: the map's
@@ -184,6 +348,49 @@ export default function MapJourney({ data }: { data: MapData }) {
       );
     },
     () => [stickyRef.current, mapRegionRef.current, cardColRef.current, ...cardRefs.current],
+    // The narrow deck and the wide carousel are different trees, so these
+    // elements only exist while `wide` is true. Without re-observing on the
+    // switch, the pass would run once at mount against nulls and never again —
+    // leaving the map pinned at left: 0 and the connector lines undrawn.
+    [wide],
+  );
+
+  // The same idea for the deck: one pass, all reads, one commit. Nothing here
+  // depends on the scroll position — the connectors offset from `baseX` by the
+  // deck's live position, so this only re-runs when something actually resizes.
+  useResizeEffect(
+    () => {
+      const rootEl = outerRef.current;
+      const mapEl = narrowMapRef.current;
+      const deckEl = deckRef.current;
+      if (!rootEl || !mapEl || !deckEl) return;
+
+      const rootRect = rootEl.getBoundingClientRect();
+      const mapRect = mapEl.getBoundingClientRect();
+      const deckRect = deckEl.getBoundingClientRect();
+
+      const step = deckStep(deckEl);
+      // Cards snap centred, so the focused card's centre is the deck's centre.
+      const baseX = deckRect.left - rootRect.left + deckRect.width / 2;
+      const y1 = deckRect.top - rootRect.top;
+      const pins = data.pins.map((p) => ({
+        x: mapRect.left - rootRect.left + (p.x / data.vbW) * mapRect.width,
+        y: mapRect.top - rootRect.top + (p.y / data.vbH) * mapRect.height,
+      }));
+
+      setDeckGeo((prev) =>
+        prev &&
+        prev.baseX === baseX &&
+        prev.y1 === y1 &&
+        prev.step === step &&
+        prev.pins[0]?.x === pins[0]?.x &&
+        prev.pins[0]?.y === pins[0]?.y
+          ? prev
+          : { baseX, y1, step, pins },
+      );
+    },
+    () => [outerRef.current, narrowMapRef.current, deckRef.current],
+    [wide],
   );
 
   // ── reduced motion: whole world + list (accessible fallback) ──
@@ -202,8 +409,9 @@ export default function MapJourney({ data }: { data: MapData }) {
               </div>
               <span className="flex shrink-0 items-center gap-3">
                 {h.award ? (
-                  <span className="rounded-full border border-accent-2/40 bg-accent-2/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-2">
-                    ★ {h.award}
+                  <span className="inline-flex items-center gap-2 rounded-full bg-accent-2 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.14em] text-background">
+                    <Trophy className="h-4 w-4 shrink-0" />
+                    {h.award}
                   </span>
                 ) : null}
                 {h.repo ? (
@@ -232,10 +440,69 @@ export default function MapJourney({ data }: { data: MapData }) {
     );
   }
 
-  // One tree for both layouts. Wide/narrow differ only in CSS — the map region
-  // and card column go from stacked grid rows to overlapping absolute boxes at
-  // `md:`. Nothing unmounts when the breakpoint is crossed, so framer's scroll
-  // measurements stay valid and the section can't jump mid-drag.
+  // ── narrow: whole world, scaled to fit, above a horizontal snap-scroll deck ──
+  // Nothing is sticky and nothing is scroll-jacked here; the section is ordinary
+  // page flow and the only scroll being interpreted is the deck's own. This is
+  // the one place the two layouts genuinely diverge in markup rather than CSS,
+  // so crossing the breakpoint does remount the section.
+  if (!wide) {
+    return (
+      // `outerRef` stays attached even though nothing here is scroll-linked, so
+      // the shared `useScroll` above always has a mounted target to measure.
+      <div ref={outerRef} className="relative">
+        {/* The whole map, contained and centred — no crop, so it floats on the
+            paper background instead of sitting in a box with cut-off edges. */}
+        <div className="px-6">
+          <div
+            ref={narrowMapRef}
+            className="relative mx-auto w-full"
+            style={{ maxWidth: NARROW_MAP_MAX_W, aspectRatio: `${data.vbW} / ${data.vbH}` }}
+          >
+            <MapLayersLive data={data} t={t} pinScale={NARROW_PIN_SCALE} />
+          </div>
+        </div>
+
+        {deckGeo ? (
+          <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
+            {deckGeo.pins.map((pin, i) => (
+              <DeckConnector
+                key={data.pins[i].city}
+                index={i}
+                t={t}
+                step={deckGeo.step}
+                baseX={deckGeo.baseX}
+                y1={deckGeo.y1}
+                x2={pin.x}
+                y2={pin.y}
+              />
+            ))}
+          </svg>
+        ) : null}
+
+        <div
+          ref={deckRef}
+          role="region"
+          aria-label="Hackathon cities"
+          style={{ paddingInline: DECK_PAD }}
+          className="relative z-20 mt-6 flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {hackathons.map((h, i) => (
+            <DeckCard key={h.city} h={h} index={i} t={t} />
+          ))}
+        </div>
+
+        <div className="mt-5 flex justify-center gap-2">
+          {data.pins.map((p, i) => (
+            <Dot key={p.city} index={i} t={t} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // One tree for the wide layout. The map region and card column overlap as
+  // absolute boxes at `md:`; the grid rows below are the pre-`md:` fallback for
+  // the frame between hydration and `useWide` resolving.
   const vars = {
     "--card-w": `${CARD_WIDTH}px`,
     // Never let the carousel window grow past the space the sticky container
@@ -348,12 +615,15 @@ function CityCard({
 }) {
   const y = useTransform(t, (v) => (index - v) * spacing);
   // How close the scroll is to this card — 1 when parked on it, 0 a full city
-  // away. Awarded cities use it to bloom their badge and card glow.
+  // away. Awarded cities use it to fade their banner and card glow.
   const near = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
-  const badgeOpacity = useTransform(near, [0, 0.55, 1], [0, 0, 1]);
-  const badgeScale = useTransform(near, [0.55, 1], [0.88, 1]);
-  const badgeY = useTransform(near, [0.55, 1], [8, 0]);
-  const glowOpacity = useTransform(near, [0.4, 1], [0, 1]);
+  // The banner never drops out entirely: a card must never slide in wearing a
+  // blank coral band, so it enters already legible and firms up to full strength
+  // across the middle of the card's pass.
+  const awardOpacity = useTransform(near, [0, 0.3], [0.5, 1]);
+  // Full strength early, and held there for most of the card's time on screen
+  // rather than peaking only at the exact parked position.
+  const glowOpacity = useTransform(near, [0.05, 0.35], [0, 1]);
 
   return (
     <div
@@ -361,13 +631,14 @@ function CityCard({
       className="absolute left-6 right-6 top-1/2 -translate-y-1/2 md:left-10 md:right-10"
     >
       <motion.div
-        className="relative flex flex-col justify-center rounded-2xl border border-border bg-background-soft/80 p-6 shadow-sm md:p-8"
+        className="relative"
         style={{ y, pointerEvents: focused ? "auto" : "none" }}
         aria-hidden={focused ? undefined : true}
       >
         {h.award ? (
           // Static shadow faded with opacity. Interpolating the box-shadow
-          // string itself repainted the card on every scroll frame.
+          // string itself repainted the card on every scroll frame. It sits
+          // outside the clipping box below so the halo can spill past the card.
           <motion.span
             aria-hidden="true"
             className="card-glow pointer-events-none absolute inset-0 rounded-2xl"
@@ -375,59 +646,155 @@ function CityCard({
           />
         ) : null}
 
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
-          {h.city}, {h.country}
-        </p>
-        <h3 className="display mt-1 text-3xl text-ink sm:text-4xl">{h.event}</h3>
-        <p className="mt-2 text-base font-medium" style={{ color: BLUE }}>
-          {h.project}
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-muted">{h.blurb}</p>
-        {h.award ? (
-          <motion.span
-            className="mt-3 self-start rounded-full border border-accent-2/40 bg-accent-2/10 px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-accent-2"
-            style={{ opacity: badgeOpacity, scale: badgeScale, y: badgeY }}
-          >
-            ★ {h.award}
-          </motion.span>
-        ) : null}
-        <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
-          {h.repo ? (
-            <a
-              href={h.repo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
-              onClick={() =>
-                capture("hackathon_repo_clicked", {
-                  hackathon_event: h.event,
-                  hackathon_city: h.city,
-                  project_name: h.project,
-                })
-              }
-            >
-              <Github className="h-4 w-4" /> GitHub
-            </a>
+        {/* `overflow-hidden` is what lets the award banner run edge to edge and
+            still take the card's rounded corners. */}
+        <div className="relative flex flex-col justify-center overflow-hidden rounded-2xl border border-border bg-background-soft/80 shadow-sm">
+          {h.award ? (
+            <AwardBanner
+              award={h.award}
+              padX="px-6 md:px-8"
+              height={AWARD_BANNER_H}
+              textClass="text-[13px] tracking-[0.18em]"
+              opacity={awardOpacity}
+            />
           ) : null}
-          {h.link ? (
-            <a
-              href={h.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-accent"
-              onClick={() =>
-                capture("hackathon_link_clicked", {
-                  hackathon_event: h.event,
-                  hackathon_city: h.city,
-                  project_name: h.project,
-                })
-              }
-            >
-              View project <ArrowUpRight className="h-3.5 w-3.5" />
-            </a>
-          ) : null}
+          <CardDetails
+            h={h}
+            pad="p-6 md:p-8"
+            titleClass="text-3xl sm:text-4xl"
+            blurbClass="text-sm"
+          />
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+/* Narrow layout's card. One per screen in a horizontal snap-scroll deck: no
+   absolute positioning and no height math — the flex row stretches every card
+   to the tallest one, so nothing can clip however long the blurb runs. The only
+   scroll-linked thing left is the coral glow on the card you're parked on. */
+function DeckCard({
+  h,
+  index,
+  t,
+}: {
+  h: (typeof hackathons)[number];
+  index: number;
+  t: MotionValue<number>;
+}) {
+  const near = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  const glowOpacity = useTransform(near, [0.05, 0.35], [0, 1]);
+  return (
+    <div className="relative shrink-0 snap-center" style={{ width: DECK_CARD_W }}>
+      {h.award ? (
+        <motion.span
+          aria-hidden="true"
+          className="card-glow pointer-events-none absolute inset-0 rounded-2xl"
+          style={{ opacity: glowOpacity }}
+        />
+      ) : null}
+      <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-background-soft/80 shadow-sm">
+        {h.award ? (
+          <AwardBanner
+            award={h.award}
+            padX="px-5"
+            height={NARROW_BANNER_H}
+            textClass="text-[11px] tracking-[0.14em]"
+          />
+        ) : null}
+        <CardDetails h={h} pad="px-5 py-6" titleClass="text-2xl" blurbClass="text-[13px]" />
+      </div>
+    </div>
+  );
+}
+
+/* The win, worn across the top of the card. `opacity` is a MotionValue in the
+   wide carousel, where the banner softens at the edges of the carousel window;
+   in the deck every card sits still, so it reads at full strength. */
+function AwardBanner({
+  award,
+  padX,
+  height,
+  textClass,
+  opacity,
+}: {
+  award: string;
+  padX: string;
+  height: number;
+  textClass: string;
+  opacity?: MotionValue<number>;
+}) {
+  return (
+    <motion.div
+      className={`flex shrink-0 items-center gap-2.5 bg-accent-2 text-background ${padX}`}
+      style={{ height, ...(opacity ? { opacity } : null) }}
+    >
+      <Trophy className="h-4 w-4 shrink-0" />
+      <span className={`font-mono font-bold uppercase ${textClass}`}>{award}</span>
+    </motion.div>
+  );
+}
+
+/* Everything below the banner. Shared by both layouts so the copy and the two
+   analytics events have exactly one definition. */
+function CardDetails({
+  h,
+  pad,
+  titleClass,
+  blurbClass,
+}: {
+  h: (typeof hackathons)[number];
+  pad: string;
+  titleClass: string;
+  blurbClass: string;
+}) {
+  return (
+    <div className={`flex flex-1 flex-col justify-center ${pad}`}>
+      <p className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        {h.city}, {h.country}
+      </p>
+      <h3 className={`display mt-1 text-ink ${titleClass}`}>{h.event}</h3>
+      <p className="mt-2 text-base font-medium" style={{ color: BLUE }}>
+        {h.project}
+      </p>
+      <p className={`mt-3 leading-relaxed text-muted ${blurbClass}`}>{h.blurb}</p>
+      <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
+        {h.repo ? (
+          <a
+            href={h.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-ink transition-colors hover:text-accent"
+            onClick={() =>
+              capture("hackathon_repo_clicked", {
+                hackathon_event: h.event,
+                hackathon_city: h.city,
+                project_name: h.project,
+              })
+            }
+          >
+            <Github className="h-4 w-4" /> GitHub
+          </a>
+        ) : null}
+        {h.link ? (
+          <a
+            href={h.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-accent"
+            onClick={() =>
+              capture("hackathon_link_clicked", {
+                hackathon_event: h.event,
+                hackathon_city: h.city,
+                project_name: h.project,
+              })
+            }
+          >
+            View project <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -454,6 +821,47 @@ function Connector({
   y2: number;
 }) {
   const y1 = useTransform(t, (v) => baseY + (index - v) * spacing);
+  const opacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
+  return (
+    <g>
+      <motion.line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={CORAL}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeDasharray="1 6"
+        opacity={opacity}
+      />
+      <motion.circle cx={x2} cy={y2} r={4} fill={CORAL} opacity={opacity} />
+    </g>
+  );
+}
+
+/* The deck's connector. Same dotted thread and the same fade by scroll
+   proximity as the carousel's, but hung from the focused card's top edge: the
+   deck's cards travel horizontally, so `x1` tracks the live position where
+   `Connector` tracks `y1`. */
+function DeckConnector({
+  index,
+  t,
+  step,
+  baseX,
+  y1,
+  x2,
+  y2,
+}: {
+  index: number;
+  t: MotionValue<number>;
+  step: number;
+  baseX: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}) {
+  const x1 = useTransform(t, (v) => baseX + (index - v) * step);
   const opacity = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
   return (
     <g>
@@ -504,7 +912,15 @@ function MapDots() {
 
 /* Live map: pins light up progressively as the scroll passes them, and the
    nearest city gets the pulse — all driven by the continuous scroll position. */
-function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
+function MapLayersLive({
+  data,
+  t,
+  pinScale = 1,
+}: {
+  data: MapData;
+  t: MotionValue<number>;
+  pinScale?: number;
+}) {
   return (
     <>
       <MapDots />
@@ -515,7 +931,7 @@ function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
       >
         <MapDefs />
         {data.pins.map((p, i) => (
-          <Pin key={p.city} p={p} index={i} t={t} />
+          <Pin key={p.city} p={p} index={i} t={t} sizeScale={pinScale} />
         ))}
       </svg>
     </>
@@ -529,7 +945,19 @@ function MapLayersLive({ data, t }: { data: MapData; t: MotionValue<number> }) {
 const PIN_R = 1.6;
 const PIN_R_MIN = 1.15;
 
-function Pin({ p, index, t }: { p: MapData["pins"][number]; index: number; t: MotionValue<number> }) {
+function Pin({
+  p,
+  index,
+  t,
+  sizeScale,
+}: {
+  p: MapData["pins"][number];
+  index: number;
+  t: MotionValue<number>;
+  // The narrow map is drawn much smaller, and these radii are in viewBox units
+  // — so they'd shrink with it. Scaled back up to stay legible there.
+  sizeScale: number;
+}) {
   const near = useTransform(t, (v) => clamp(1 - Math.abs(v - index)));
   const coralOpacity = useTransform(t, (v) => clamp(v - index + 0.5));
   const scale = useTransform(near, (v) => (PIN_R_MIN + 0.45 * v) / PIN_R);
@@ -537,21 +965,27 @@ function Pin({ p, index, t }: { p: MapData["pins"][number]; index: number; t: Mo
   const spin = { transformBox: "fill-box", transformOrigin: "center" } as const;
   return (
     <g>
-      <motion.circle cx={p.x} cy={p.y} r={5} fill="url(#pinglow)" style={{ opacity: haloOpacity }} />
-      {/* The pulse keyframe animates its own opacity, so gate visibility with
-          the wrapping group — only the pin nearest the scroll pulses. */}
-      <motion.g style={{ opacity: near }}>
-        <circle cx={p.x} cy={p.y} r={1.9} fill={CORAL} className="pulse-ring" />
-      </motion.g>
-      <circle cx={p.x} cy={p.y} r={PIN_R_MIN} fill={BLUE} />
       <motion.circle
         cx={p.x}
         cy={p.y}
-        r={PIN_R}
+        r={5 * sizeScale}
+        fill="url(#pinglow)"
+        style={{ opacity: haloOpacity }}
+      />
+      {/* The pulse keyframe animates its own opacity, so gate visibility with
+          the wrapping group — only the pin nearest the scroll pulses. */}
+      <motion.g style={{ opacity: near }}>
+        <circle cx={p.x} cy={p.y} r={1.9 * sizeScale} fill={CORAL} className="pulse-ring" />
+      </motion.g>
+      <circle cx={p.x} cy={p.y} r={PIN_R_MIN * sizeScale} fill={BLUE} />
+      <motion.circle
+        cx={p.x}
+        cy={p.y}
+        r={PIN_R * sizeScale}
         fill={CORAL}
         style={{ opacity: coralOpacity, scale, ...spin }}
       />
-      <circle cx={p.x} cy={p.y} r={0.4} fill="#fff" opacity={0.9} />
+      <circle cx={p.x} cy={p.y} r={0.4 * sizeScale} fill="#fff" opacity={0.9} />
     </g>
   );
 }
