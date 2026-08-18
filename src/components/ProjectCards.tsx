@@ -1,54 +1,76 @@
+"use client";
+
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Reveal from "@/components/Reveal";
-import TrackedLink, { external } from "@/components/ui/TrackedLink";
+import ProjectDialog from "@/components/ProjectDialog";
 import { projectCards } from "@/data/content";
-import { ArrowUpRight } from "@/components/ui/icons";
+import { capture } from "@/lib/analytics";
 
 /**
- * The six projects that have a screenshot, as a two-up grid of image cards.
- * Whole card is one link; the screenshots carry the weight so the copy stays small.
+ * The six projects that have a screenshot, as a two-up contact sheet.
+ *
+ * There is deliberately no card chrome — no border, no fill, no frame. The
+ * screenshots sit straight on the paper and carry the section on their own;
+ * the copy underneath is a caption, not a card body. Two columns rather than
+ * three so the shots are large enough to actually read.
+ *
+ * Clicking a project opens the full write-up in a dialog.
  */
 export default function ProjectCards() {
-  return (
-    <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-      {projectCards.map((project, i) => (
-        <Reveal as="li" key={project.name} delay={0.05 * i}>
-          <TrackedLink
-            href={project.href}
-            {...external}
-            event="project_clicked"
-            properties={{
-              project_name: project.name,
-              link_type: project.linkLabel === "Live demo" ? "demo" : "repo",
-              surface: "card",
-            }}
-            className="group flex h-full flex-col overflow-hidden rounded-md border border-border bg-background-soft shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
-          >
-            <div className="relative aspect-[16/10] overflow-hidden border-b border-border">
-              <Image
-                src={project.image}
-                alt={project.imageAlt}
-                fill
-                sizes="(min-width: 768px) 260px, (min-width: 640px) 400px, 100vw"
-                className="object-cover object-top motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out motion-safe:group-hover:scale-[1.04]"
-              />
-            </div>
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // The dialog unmounts on close, so the browser's own focus restoration
+  // doesn't apply — put focus back on the tile that opened it.
+  const trigger = useRef<HTMLButtonElement | null>(null);
 
-            <div className="flex flex-1 flex-col p-3">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-medium">{project.name}</h3>
-                <ArrowUpRight className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-muted transition-colors group-hover:text-accent" />
+  return (
+    <>
+      <ul className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2">
+        {projectCards.map((project, i) => (
+          <Reveal as="li" key={project.name} delay={0.05 * i}>
+            <button
+              type="button"
+              onClick={(e) => {
+                trigger.current = e.currentTarget;
+                setOpenIndex(i);
+                capture("project_opened", { project_name: project.name });
+              }}
+              className="group block w-full cursor-pointer rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              {/* The whole tile scales on hover, not the image inside its frame —
+                  so the screenshot grows as one object rather than zooming
+                  behind a fixed window. */}
+              <div className="relative aspect-[16/10] overflow-hidden rounded-md motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.02]">
+                <Image
+                  src={project.image}
+                  alt={project.imageAlt}
+                  fill
+                  sizes="(min-width: 640px) 400px, 100vw"
+                  className="object-cover object-top"
+                />
               </div>
-              <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted">
-                {project.blurb}
+
+              <p className="kicker mt-2.5 text-[0.65rem]">
+                <span className="text-accent">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-muted"> · {project.linkLabel}</span>
               </p>
-              <span className="kicker mt-auto pt-3 text-[0.625rem] text-muted transition-colors group-hover:text-accent">
-                {project.linkLabel}
-              </span>
-            </div>
-          </TrackedLink>
-        </Reveal>
-      ))}
-    </ul>
+              <h3 className="display mt-1.5 text-[1.15rem]">{project.name}</h3>
+              <p className="mt-1 text-sm leading-snug text-muted">{project.blurb}</p>
+            </button>
+          </Reveal>
+        ))}
+      </ul>
+
+      {openIndex !== null && (
+        <ProjectDialog
+          project={projectCards[openIndex]}
+          index={openIndex + 1}
+          onClose={() => {
+            setOpenIndex(null);
+            trigger.current?.focus();
+          }}
+        />
+      )}
+    </>
   );
 }
