@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef } from "react";
 import Image from "next/image";
 import TrackedLink, { external } from "@/components/ui/TrackedLink";
-import type { ProjectCard } from "@/data/content";
+import type { Project } from "@/data/projects";
 import { ArrowUpRight, Close, Github } from "@/components/ui/icons";
 
 /**
@@ -19,7 +19,7 @@ export default function ProjectDialog({
   index,
   onClose,
 }: {
-  project: ProjectCard;
+  project: Project;
   /** 1-based position in the grid, shown as the `01` kicker. */
   index: number;
   onClose: () => void;
@@ -75,13 +75,18 @@ export default function ProjectDialog({
 
         <div className="grid gap-8 p-6 sm:p-8 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:gap-10">
           <div>
-            <div className="relative aspect-[16/10] overflow-hidden rounded-md">
+            {/* The grid tile crops to a uniform 16:10; here the image gets its
+                own shape back, so the full screenshot is always reachable. */}
+            <div
+              className="relative overflow-hidden rounded-md"
+              style={{ aspectRatio: `${project.width} / ${project.height}` }}
+            >
               <Image
                 src={project.image}
                 alt={project.imageAlt}
                 fill
                 sizes="(min-width: 768px) 420px, 88vw"
-                className="object-cover object-top"
+                className="object-contain"
               />
             </div>
 

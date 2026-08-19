@@ -4,20 +4,34 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import Reveal from "@/components/Reveal";
 import ProjectDialog from "@/components/ProjectDialog";
-import { projectCards } from "@/data/content";
+import type { FocalPoint, Project } from "@/data/projects";
 import { capture } from "@/lib/analytics";
 
 /**
- * The six projects that have a screenshot, as a two-up contact sheet.
+ * Tailwind only sees class names it can read as literal strings, so the focal
+ * point maps through a lookup rather than being interpolated into a class.
+ */
+const FOCAL: Record<FocalPoint, string> = {
+  top: "object-top",
+  center: "object-center",
+  bottom: "object-bottom",
+  left: "object-left",
+  right: "object-right",
+};
+
+/**
+ * The projects with a screenshot, as a two-up contact sheet.
  *
  * There is deliberately no card chrome — no border, no fill, no frame. The
  * screenshots sit straight on the paper and carry the section on their own;
  * the copy underneath is a caption, not a card body. Two columns rather than
  * three so the shots are large enough to actually read.
  *
- * Clicking a project opens the full write-up in a dialog.
+ * Clicking a project opens the full write-up in a dialog. Content comes from
+ * `content/projects/*.md` via `getProjects()`, which is build-time only — so
+ * the server section above reads it and passes it down here.
  */
-export default function ProjectCards() {
+export default function ProjectCards({ projects }: { projects: Project[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   // The dialog unmounts on close, so the browser's own focus restoration
   // doesn't apply — put focus back on the tile that opened it.
@@ -26,8 +40,8 @@ export default function ProjectCards() {
   return (
     <>
       <ul className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2">
-        {projectCards.map((project, i) => (
-          <Reveal as="li" key={project.name} delay={0.05 * i}>
+        {projects.map((project, i) => (
+          <Reveal as="li" key={project.slug} delay={0.05 * i}>
             <button
               type="button"
               onClick={(e) => {
@@ -46,7 +60,7 @@ export default function ProjectCards() {
                   alt={project.imageAlt}
                   fill
                   sizes="(min-width: 640px) 400px, 100vw"
-                  className="object-cover object-top"
+                  className={`object-cover ${FOCAL[project.focal]}`}
                 />
               </div>
 
@@ -63,7 +77,7 @@ export default function ProjectCards() {
 
       {openIndex !== null && (
         <ProjectDialog
-          project={projectCards[openIndex]}
+          project={projects[openIndex]}
           index={openIndex + 1}
           onClose={() => {
             setOpenIndex(null);

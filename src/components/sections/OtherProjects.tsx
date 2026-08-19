@@ -3,6 +3,7 @@ import Reveal from "@/components/Reveal";
 import ProjectCards from "@/components/ProjectCards";
 import TrackedLink, { external } from "@/components/ui/TrackedLink";
 import { site } from "@/data/site";
+import { getProjects } from "@/data/projects";
 import { Github } from "@/components/ui/icons";
 
 export default function OtherProjects() {
@@ -33,7 +34,7 @@ export default function OtherProjects() {
         </TrackedLink>
       </Reveal>
 
-      <ProjectCards />
+      <ProjectCards projects={getProjects()} />
     </Section>
   );
 }
