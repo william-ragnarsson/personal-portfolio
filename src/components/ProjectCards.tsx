@@ -24,8 +24,8 @@ const FOCAL: Record<FocalPoint, string> = {
  *
  * There is deliberately no card chrome — no border, no fill, no frame. The
  * screenshots sit straight on the paper and carry the section on their own;
- * the copy underneath is a caption, not a card body. Two columns rather than
- * three so the shots are large enough to actually read.
+ * the copy underneath is a caption, not a card body. Three across at `md` so
+ * all six land in one screen; two, then one, as the viewport narrows.
  *
  * Clicking a project opens the full write-up in a dialog. Content comes from
  * `content/projects/*.md` via `getProjects()`, which is build-time only — so
@@ -39,7 +39,7 @@ export default function ProjectCards({ projects }: { projects: Project[] }) {
 
   return (
     <>
-      <ul className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2">
+      <ul className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 md:grid-cols-3">
         {projects.map((project, i) => (
           <Reveal as="li" key={project.slug} delay={0.05 * i}>
             <button
@@ -59,17 +59,14 @@ export default function ProjectCards({ projects }: { projects: Project[] }) {
                   src={project.image}
                   alt={project.imageAlt}
                   fill
-                  sizes="(min-width: 640px) 400px, 100vw"
+                  sizes="(min-width: 768px) 250px, (min-width: 640px) 400px, 100vw"
                   className={`object-cover ${FOCAL[project.focal]}`}
                 />
               </div>
 
-              <p className="kicker mt-2.5 text-[0.65rem]">
-                <span className="text-accent">{String(i + 1).padStart(2, "0")}</span>
-                <span className="text-muted"> · {project.linkLabel}</span>
-              </p>
-              <h3 className="display mt-1.5 text-[1.15rem]">{project.name}</h3>
-              <p className="mt-1 text-sm leading-snug text-muted">{project.blurb}</p>
+              {/* Name only. The blurb, the numbering and the link label all
+                  live in the dialog — on the page the screenshots do the work. */}
+              <h3 className="display mt-3 text-[1.05rem]">{project.name}</h3>
             </button>
           </Reveal>
         ))}
