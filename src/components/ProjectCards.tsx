@@ -1,54 +1,87 @@
+"use client";
+
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Reveal from "@/components/Reveal";
-import TrackedLink, { external } from "@/components/ui/TrackedLink";
-import { projectCards } from "@/data/content";
-import { ArrowUpRight } from "@/components/ui/icons";
+import ProjectDialog from "@/components/ProjectDialog";
+import type { FocalPoint, Project } from "@/data/projects";
+import { capture } from "@/lib/analytics";
 
 /**
- * The six projects that have a screenshot, as a two-up grid of image cards.
- * Whole card is one link; the screenshots carry the weight so the copy stays small.
+ * Tailwind only sees class names it can read as literal strings, so the focal
+ * point maps through a lookup rather than being interpolated into a class.
  */
-export default function ProjectCards() {
-  return (
-    <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-      {projectCards.map((project, i) => (
-        <Reveal as="li" key={project.name} delay={0.05 * i}>
-          <TrackedLink
-            href={project.href}
-            {...external}
-            event="project_clicked"
-            properties={{
-              project_name: project.name,
-              link_type: project.linkLabel === "Live demo" ? "demo" : "repo",
-              surface: "card",
-            }}
-            className="group flex h-full flex-col overflow-hidden rounded-md border border-border bg-background-soft shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
-          >
-            <div className="relative aspect-[16/10] overflow-hidden border-b border-border">
-              <Image
-                src={project.image}
-                alt={project.imageAlt}
-                fill
-                sizes="(min-width: 768px) 260px, (min-width: 640px) 400px, 100vw"
-                className="object-cover object-top motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out motion-safe:group-hover:scale-[1.04]"
-              />
-            </div>
+const FOCAL: Record<FocalPoint, string> = {
+  top: "object-top",
+  center: "object-center",
+  bottom: "object-bottom",
+  left: "object-left",
+  right: "object-right",
+};
 
-            <div className="flex flex-1 flex-col p-3">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-medium">{project.name}</h3>
-                <ArrowUpRight className="h-3.5 w-3.5 shrink-0 translate-y-0.5 text-muted transition-colors group-hover:text-accent" />
+/**
+ * The projects with a screenshot, as a two-up contact sheet.
+ *
+ * There is deliberately no card chrome — no border, no fill, no frame. The
+ * screenshots sit straight on the paper and carry the section on their own;
+ * the copy underneath is a caption, not a card body. Three across at `md` so
+ * all six land in one screen; two, then one, as the viewport narrows.
+ *
+ * Clicking a project opens the full write-up in a dialog. Content comes from
+ * `content/projects/*.md` via `getProjects()`, which is build-time only — so
+ * the server section above reads it and passes it down here.
+ */
+export default function ProjectCards({ projects }: { projects: Project[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // The dialog unmounts on close, so the browser's own focus restoration
+  // doesn't apply — put focus back on the tile that opened it.
+  const trigger = useRef<HTMLButtonElement | null>(null);
+
+  return (
+    <>
+      <ul className="mt-12 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 md:grid-cols-3">
+        {projects.map((project, i) => (
+          <Reveal as="li" key={project.slug} delay={0.05 * i}>
+            <button
+              type="button"
+              onClick={(e) => {
+                trigger.current = e.currentTarget;
+                setOpenIndex(i);
+                capture("project_opened", { project_name: project.name });
+              }}
+              className="group block w-full cursor-pointer rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              {/* The whole tile scales on hover, not the image inside its frame —
+                  so the screenshot grows as one object rather than zooming
+                  behind a fixed window. */}
+              <div className="relative aspect-[16/10] overflow-hidden rounded-md motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.02]">
+                <Image
+                  src={project.image}
+                  alt={project.imageAlt}
+                  fill
+                  sizes="(min-width: 768px) 250px, (min-width: 640px) 400px, 100vw"
+                  className={`object-cover ${FOCAL[project.focal]}`}
+                />
               </div>
-              <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted">
-                {project.blurb}
-              </p>
-              <span className="kicker mt-auto pt-3 text-[0.625rem] text-muted transition-colors group-hover:text-accent">
-                {project.linkLabel}
-              </span>
-            </div>
-          </TrackedLink>
-        </Reveal>
-      ))}
-    </ul>
+
+              {/* Name only. The blurb, the numbering and the link label all
+                  live in the dialog — on the page the screenshots do the work. */}
+              <h3 className="display mt-3 text-[1.05rem]">{project.name}</h3>
+            </button>
+          </Reveal>
+        ))}
+      </ul>
+
+      {openIndex !== null && (
+        <ProjectDialog
+          project={projects[openIndex]}
+          index={openIndex + 1}
+          onClose={() => {
+            setOpenIndex(null);
+            trigger.current?.focus();
+          }}
+        />
+      )}
+    </>
   );
 }

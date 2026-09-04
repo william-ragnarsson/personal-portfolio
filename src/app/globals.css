@@ -103,6 +103,42 @@ html {
     0 12px 40px -12px color-mix(in srgb, var(--accent-2) 35%, transparent);
 }
 
+/* Project dialog entry. `@starting-style` gives the open transition without a
+   JS "mounted" class — the dialog is mounted and shown in the same tick, so a
+   state-driven class would need a second render to take effect. Only opacity
+   and transform animate. There's no exit transition: the element unmounts. */
+dialog[open] {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 0.25s ease-out,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+  transition: opacity 0.25s ease-out;
+}
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog[open],
+  dialog[open]::backdrop {
+    transition: none;
+    transform: none;
+  }
+}
+
 /* map dot pulse */
 @keyframes pulse-ring {
   0% {
