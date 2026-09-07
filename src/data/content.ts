@@ -11,6 +11,8 @@ type HackathonBase = {
   lng: number;
   repo?: string;
   link?: string;
+  /** Label for the `link` CTA. Defaults to "View project". */
+  linkLabel?: string;
 };
 
 // Project cards used to be promoted out of this list, which is why entries
@@ -62,6 +64,19 @@ export const hackathons: Hackathon[] = [
     lat: 50.85,
     lng: 4.35,
     repo: "https://github.com/william-ragnarsson/DataForGoodChallenge",
+  },
+  {
+    city: "Belgium",
+    country: "Belgium",
+    event: "Start Academy",
+    project: "Tunebox",
+    blurb:
+      "A startup competition, where I presented Tunebox, a hardware startup from my first year of university.",
+    award: "2nd place",
+    lat: 50.85,
+    lng: 4.35,
+    link: "https://www.youtube.com/watch?v=JGS_X_n-Gvs",
+    linkLabel: "Watch the trailer",
   },
 ];
 

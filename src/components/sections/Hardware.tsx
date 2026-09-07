@@ -1,18 +1,28 @@
 import Section, { Prose } from "@/components/ui/Section";
+import TuneboxTrailer from "@/components/TuneboxTrailer";
 import TuneboxGallery from "@/components/TuneboxGallery";
 
+/**
+ * Media-led: the trailer and photo strip lead, then the story runs as one
+ * uninterrupted block — not the text/media/text/media ladder this section used
+ * to be. It keeps the standard 820px `Section` measure so its column lines up
+ * with every other narrative section down the page.
+ */
 export default function Hardware() {
   return (
     <Section
       kicker="04 — Before software"
       title={
         <>
-          I did my own <span className="text-accent">startup</span> in my first
+          Tried my own <span className="text-accent">startup</span> in my first
           year of university.
         </>
       }
     >
-      <Prose delay={0.1}>
+      <TuneboxTrailer />
+      <TuneboxGallery />
+
+      <Prose delay={0.1} className="mt-12">
         It was <span className="font-medium text-foreground">Tunebox</span>, a
         hardware startup: a more creative, hands-on project than anything
         I&apos;d done before, and the thing that first lit the{" "}
@@ -22,13 +32,20 @@ export default function Hardware() {
         .
       </Prose>
 
+      <Prose delay={0.1} className="mt-5">
+        I made this trailer for{" "}
+        <span className="font-medium text-foreground">Start Academy</span>, a
+        startup competition we placed{" "}
+        <span className="font-medium text-foreground">2nd</span> in, out of 120
+        startups. There was a hard deadline on the video and the whole thing was
+        pretty impulsive, so I stayed up until 5:00 AM filming and editing.
+      </Prose>
+
       <Prose delay={0.14} className="mt-5">
         I&apos;ve since moved on from the hardware, (luckily) but not the itch.
         Ever since, my focus has been{" "}
         <span className="font-medium text-foreground">100% startups</span>.
       </Prose>
-
-      <TuneboxGallery />
     </Section>
   );
 }

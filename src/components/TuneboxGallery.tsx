@@ -2,37 +2,40 @@ import Image from "next/image";
 import Reveal from "@/components/Reveal";
 
 /**
- * Editorial collage of the three Tunebox pitch photos (VLAJO NextGen Fest '24).
- * Big stage shot dominant; the mic close-up and crowd shot stack beside it.
- * Sized to sit within the section's 820px text measure.
+ * Three Tunebox pitch photos, as a contact sheet directly under the trailer —
+ * hence the tight top margin: the two read as one media block, not as a second
+ * gallery competing with the video.
+ *
+ * They're 3:2 because the sources are: every one is 1620x1080, and two of the
+ * three are wide scenes (a stand, a full auditorium) whose subject *is* their
+ * width. Squaring them cropped a third off and gutted exactly what they were
+ * there to show.
  */
 export default function TuneboxGallery() {
   return (
-    <Reveal delay={0.05} className="mt-12">
-      <div className="grid grid-cols-1 gap-3 sm:aspect-[3/2] sm:grid-cols-3 sm:grid-rows-2">
+    <Reveal delay={0.1} className="mt-3">
+      <div className="grid grid-cols-3 gap-3">
         <Tile
           src="/images/tunebox/stage.jpg"
-          alt="Pitching Tunebox on stage at VLAJO NextGen Fest '24"
-          mobileAspect="aspect-[4/3]"
-          className="sm:col-span-2 sm:row-span-2"
-          sizes="(min-width: 640px) 540px, 100vw"
+          alt="The Tunebox stand at VLAJO NextGen Fest '24"
+          sizes="(min-width: 820px) 260px, 33vw"
         />
         <Tile
           src="/images/tunebox/pitch.jpg"
           alt="Delivering the Tunebox pitch to the audience"
-          mobileAspect="aspect-[3/4]"
-          sizes="(min-width: 640px) 270px, 100vw"
+          sizes="(min-width: 820px) 260px, 33vw"
         />
         <Tile
           src="/images/tunebox/crowd.jpg"
           alt="The full auditorium watching the Tunebox pitch"
-          mobileAspect="aspect-[4/3]"
-          sizes="(min-width: 640px) 270px, 100vw"
+          sizes="(min-width: 820px) 260px, 33vw"
         />
       </div>
 
-      <p className="kicker mt-4 text-muted">
-        Tunebox — VLAJO NextGen Fest &rsquo;24 finalist
+      {/* Stands on its own: these photos are a different event from the trailer,
+          and the paragraph naming that one comes after this. */}
+      <p className="kicker mt-4 text-center text-muted">
+        Pitch day at VLAJO NextGen Fest &rsquo;24 — finalist
       </p>
     </Reveal>
   );
@@ -41,20 +44,14 @@ export default function TuneboxGallery() {
 function Tile({
   src,
   alt,
-  mobileAspect,
-  className = "",
   sizes,
 }: {
   src: string;
   alt: string;
-  mobileAspect: string;
-  className?: string;
   sizes: string;
 }) {
   return (
-    <div
-      className={`group relative overflow-hidden rounded-xl border border-border ${mobileAspect} sm:aspect-auto ${className}`}
-    >
+    <div className="group relative aspect-[3/2] overflow-hidden rounded-xl border border-border">
       <Image
         src={src}
         alt={alt}

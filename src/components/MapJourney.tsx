@@ -125,6 +125,9 @@ type Geo = { x1: number; baseY: number; pins: { x: number; y: number }[] };
 
 type Metrics = { cardH: number; mapLeft: number; geo: Geo | null };
 
+// A map pin plus the index of the first hackathon that pins to that spot.
+type UniquePin = MapData["pins"][number] & { index: number };
+
 // The deck's equivalent of `Geo`. The carousel's cards move vertically past a
 // fixed anchor, so its connectors vary `y1`; the deck's move horizontally, so
 // these vary `x1` instead. `baseX` is the resting screen-X of the focused
@@ -141,6 +144,18 @@ export default function MapJourney({ data }: { data: MapData }) {
   const reduce = useReducedMotion();
   const wide = useWide();
   const n = data.pins.length;
+
+  // Two hackathons can sit at the same place (e.g. two Belgian events). The map
+  // and the progress dots draw one marker per distinct location — stacking a
+  // second identical pin just doubles its halo, pulse and connector into a
+  // blur. Every card still gets its own connector line to the shared marker.
+  // The `index` carried along is the first hackathon that owns the spot; that's
+  // what the marker's lit/pulse state keys off.
+  const uniquePins = data.pins
+    .map((p, index) => ({ ...p, index }))
+    .filter(
+      (p) => data.pins.findIndex((q) => q.x === p.x && q.y === p.y) === p.index,
+    );
 
   const outerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -398,11 +413,11 @@ export default function MapJourney({ data }: { data: MapData }) {
     return (
       <div className="mx-auto max-w-[900px] px-6">
         <div className="relative mx-auto w-[86%]" style={{ aspectRatio: `${data.vbW} / ${data.vbH}` }}>
-          <MapLayersStatic data={data} activeIndex={n - 1} />
+          <MapLayersStatic data={data} pins={uniquePins} activeIndex={n - 1} />
         </div>
         <ul className="mt-6 divide-y divide-border border-y border-border">
           {hackathons.map((h) => (
-            <li key={h.city} className="flex items-center justify-between gap-4 py-4">
+            <li key={h.event} className="flex items-center justify-between gap-4 py-4">
               <div>
                 <span className="font-medium">{h.city}</span>
                 <span className="ml-3 text-sm text-muted">{h.project}</span>
@@ -458,7 +473,7 @@ export default function MapJourney({ data }: { data: MapData }) {
             className="relative mx-auto w-full"
             style={{ maxWidth: NARROW_MAP_MAX_W, aspectRatio: `${data.vbW} / ${data.vbH}` }}
           >
-            <MapLayersLive data={data} t={t} pinScale={NARROW_PIN_SCALE} />
+            <MapLayersLive data={data} pins={uniquePins} t={t} pinScale={NARROW_PIN_SCALE} />
           </div>
         </div>
 
@@ -466,7 +481,7 @@ export default function MapJourney({ data }: { data: MapData }) {
           <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
             {deckGeo.pins.map((pin, i) => (
               <DeckConnector
-                key={data.pins[i].city}
+                key={i}
                 index={i}
                 t={t}
                 step={deckGeo.step}
@@ -487,13 +502,13 @@ export default function MapJourney({ data }: { data: MapData }) {
           className="relative z-20 mt-6 flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {hackathons.map((h, i) => (
-            <DeckCard key={h.city} h={h} index={i} t={t} />
+            <DeckCard key={h.event} h={h} index={i} t={t} />
           ))}
         </div>
 
         <div className="mt-5 flex justify-center gap-2">
-          {data.pins.map((p, i) => (
-            <Dot key={p.city} index={i} t={t} />
+          {uniquePins.map((p) => (
+            <Dot key={p.index} index={p.index} t={t} />
           ))}
         </div>
       </div>
@@ -529,12 +544,12 @@ export default function MapJourney({ data }: { data: MapData }) {
             className="absolute inset-y-0"
             style={{ aspectRatio: `${data.vbW} / ${data.vbH}`, left: mapLeft }}
           >
-            <MapLayersLive data={data} t={t} />
+            <MapLayersLive data={data} pins={uniquePins} t={t} />
           </div>
 
           <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2 md:bottom-8">
-            {data.pins.map((p, i) => (
-              <Dot key={p.city} index={i} t={t} />
+            {uniquePins.map((p) => (
+              <Dot key={p.index} index={p.index} t={t} />
             ))}
           </div>
         </div>
@@ -553,7 +568,7 @@ export default function MapJourney({ data }: { data: MapData }) {
           >
             {hackathons.map((h, i) => (
               <CityCard
-                key={h.city}
+                key={h.event}
                 ref={(el) => {
                   cardRefs.current[i] = el;
                 }}
@@ -571,7 +586,7 @@ export default function MapJourney({ data }: { data: MapData }) {
           <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible">
             {geo.pins.map((pin, i) => (
               <Connector
-                key={data.pins[i].city}
+                key={i}
                 index={i}
                 t={t}
                 spacing={spacing}
@@ -791,7 +806,7 @@ function CardDetails({
               })
             }
           >
-            View project <ArrowUpRight className="h-3.5 w-3.5" />
+            {h.linkLabel ?? "View project"} <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         ) : null}
       </div>
@@ -914,10 +929,12 @@ function MapDots() {
    nearest city gets the pulse — all driven by the continuous scroll position. */
 function MapLayersLive({
   data,
+  pins,
   t,
   pinScale = 1,
 }: {
   data: MapData;
+  pins: UniquePin[];
   t: MotionValue<number>;
   pinScale?: number;
 }) {
@@ -930,8 +947,8 @@ function MapLayersLive({
         className="absolute inset-0 h-full w-full"
       >
         <MapDefs />
-        {data.pins.map((p, i) => (
-          <Pin key={p.city} p={p} index={i} t={t} sizeScale={pinScale} />
+        {pins.map((p) => (
+          <Pin key={p.index} p={p} index={p.index} t={t} sizeScale={pinScale} />
         ))}
       </svg>
     </>
@@ -991,7 +1008,15 @@ function Pin({
 }
 
 /* Static map for the reduced-motion fallback. */
-function MapLayersStatic({ data, activeIndex }: { data: MapData; activeIndex: number }) {
+function MapLayersStatic({
+  data,
+  pins,
+  activeIndex,
+}: {
+  data: MapData;
+  pins: UniquePin[];
+  activeIndex: number;
+}) {
   return (
     <>
       <MapDots />
@@ -1001,10 +1026,10 @@ function MapLayersStatic({ data, activeIndex }: { data: MapData; activeIndex: nu
         className="absolute inset-0 h-full w-full"
       >
         <MapDefs />
-        {data.pins.map((p, i) => {
-          const lit = i <= activeIndex;
+        {pins.map((p) => {
+          const lit = p.index <= activeIndex;
           return (
-            <g key={p.city}>
+            <g key={p.index}>
               {lit ? <circle cx={p.x} cy={p.y} r={5} fill="url(#pinglow)" /> : null}
               <circle cx={p.x} cy={p.y} r={PIN_R_MIN} fill={lit ? CORAL : BLUE} />
               <circle cx={p.x} cy={p.y} r={0.4} fill="#fff" opacity={0.9} />
