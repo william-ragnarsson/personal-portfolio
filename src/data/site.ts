@@ -6,6 +6,7 @@ export const site = {
   github: "https://github.com/william-ragnarsson",
   githubHandle: "william-ragnarsson",
   linkedin: "https://www.linkedin.com/in/william-ragnarsson", // TODO: confirm handle
+  x: "https://x.com/wmragnarsson",
   pendulumDemo: "https://www.pendulum.williamragnarsson.com",
   repoUrl: "https://github.com/william-ragnarsson/personal-portfolio",
   vcDemo: "https://vcanalyst.williamragnarsson.dev",

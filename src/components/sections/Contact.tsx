@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { capture } from "@/lib/analytics";
 import { site } from "@/data/site";
-import { ArrowUpRight, Linkedin, Mail } from "@/components/ui/icons";
+import { ArrowUpRight, Linkedin, Mail, X } from "@/components/ui/icons";
 
 /** Shared pill geometry — scaled up from the button in OtherProjects. */
 const CTA_BASE =
@@ -18,7 +18,7 @@ function Panel() {
         Let&apos;s <span className="text-accent-2">Talk!</span>
       </h2>
 
-      <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+      <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
         <a
           href={`mailto:${site.email}`}
           className={`${CTA_BASE} bg-accent-2 text-background shadow-[0_10px_30px_rgba(255,90,77,0.28)] hover:shadow-[0_14px_36px_rgba(255,90,77,0.36)]`}
@@ -38,6 +38,17 @@ function Panel() {
         >
           <Linkedin className="h-5 w-5" />
           Connect on LinkedIn
+        </a>
+
+        <a
+          href={site.x}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${CTA_BASE} border border-border text-foreground hover:border-ink`}
+          onClick={() => capture("contact_link_clicked", { link_type: "x" })}
+        >
+          <X className="h-5 w-5" />
+          DM me on X
         </a>
       </div>
 
