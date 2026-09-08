@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import matter from "gray-matter";
 import { imageSize } from "image-size";
@@ -36,8 +36,15 @@ export type Project = {
   /** The long-form story, one entry per paragraph. */
   details: string[];
   stack: string[];
+  /** Promoted to a full editorial feature block. Otherwise a slim list row. */
+  featured: boolean;
   image: string;
   imageAlt: string;
+  /**
+   * Looping muted clip for a feature block, e.g. "/videos/double-pendulum.mp4".
+   * Featured projects only; the poster and reduced-motion fallback is `image`.
+   */
+  video: string | null;
   /** Which edge of the image survives the tile's crop. */
   focal: FocalPoint;
   /** Intrinsic size, so the dialog can show the image uncropped. */
@@ -138,10 +145,39 @@ function readProject(file: string, available: string[]): Project {
     fail(file, "stack must be a list of strings, e.g. [WebGPU, TypeScript].");
   }
 
+  const featured = data.featured ?? false;
+  if (typeof featured !== "boolean") {
+    fail(file, `featured must be true or false, got "${String(data.featured)}".`);
+  }
+
+  // The screenshot is required for every project — it's the poster and the
+  // reduced-motion fallback for a video block, and the list has nothing to fall
+  // back to. The video is a separate, optional field.
+  let video: string | null = null;
+  if (data.video != null) {
+    if (!featured) {
+      fail(file, `video is only for featured projects — add "featured: true" or remove it.`);
+    }
+    if (typeof data.video !== "string" || !/^\/videos\/[\w-]+\.(mp4|webm)$/.test(data.video)) {
+      fail(file, `video must look like "/videos/${slug}.mp4".`);
+    }
+    video = data.video;
+    // The clip can be added after the copy — warn rather than fail so the block
+    // still ships, showing the poster until the file lands.
+    if (!existsSync(join(process.cwd(), "public", video))) {
+      console.warn(
+        `[projects] ${file}: ${video} isn't in public/videos/ yet — the block ` +
+          `shows the poster until it's added.`,
+      );
+    }
+  }
+
   const imageName = resolveImage(file, slug, data.image, available);
   const { width, height } = imageSize(readFileSync(join(IMAGE_DIR, imageName)));
   if (!width || !height) fail(file, `could not read the dimensions of ${imageName}.`);
-  warnOnHeavyCrop(imageName, width, height, focal);
+  // A video block frames the poster as a square with object-cover; the 16:10
+  // tile-crop warning doesn't describe it.
+  if (!video) warnOnHeavyCrop(imageName, width, height, focal);
 
   return {
     slug,
@@ -149,8 +185,10 @@ function readProject(file: string, available: string[]): Project {
     blurb: requireString(file, data, "blurb"),
     details,
     stack: stack as string[],
+    featured,
     image: `/images/projects/${imageName}`,
     imageAlt: requireString(file, data, "alt"),
+    video,
     focal,
     width,
     height,

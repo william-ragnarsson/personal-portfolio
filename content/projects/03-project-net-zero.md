@@ -5,9 +5,8 @@ alt: "Project Net Zero's pipeline diagram: code is split per function, optimized
 href: "https://github.com/william-ragnarsson/project-net-zero-backend"
 linkLabel: GitHub
 stack: [Python, LLM agents, Static analysis, FastAPI]
+featured: true
 focal: top
 ---
-
-A refactoring agent with one hard rule: it may only keep a change it can prove is better. Anything else gets thrown away.
 
 The pipeline splits a codebase function by function, rewrites each one for energy efficiency, measures the carbon cost of the old and new versions, and swaps the new one in only if it is both greener and still passing the tests.

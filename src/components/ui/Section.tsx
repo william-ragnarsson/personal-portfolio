@@ -14,6 +14,12 @@ type Props = {
    * rendered after it. Used by Hackathons for the full-bleed map.
    */
   bleed?: ReactNode;
+  /**
+   * Override the 820px narrative column width — e.g. `"min(1040px, 100%)"` for a
+   * section that needs room for side-by-side media. The `100%` clamp keeps it
+   * from forcing a horizontal scrollbar at narrow widths.
+   */
+  measure?: string;
 };
 
 /**
@@ -21,10 +27,21 @@ type Props = {
  * heading. Five sections were repeating this shell verbatim, including the
  * `text-[clamp(2rem,5.5vw,3.6rem)]` heading string, so it lives here now.
  */
-export default function Section({ kicker, accent = "cobalt", title, children, bleed }: Props) {
+export default function Section({
+  kicker,
+  accent = "cobalt",
+  title,
+  children,
+  bleed,
+  measure,
+}: Props) {
   return (
     <section>
-      <div className="mx-auto max-w-[820px] px-6 py-24 sm:py-32">
+      <div
+        className="mx-auto max-w-[820px] px-6 py-24 sm:py-32"
+        // Inline style wins over the class, so the default 820px path is untouched.
+        style={measure ? { maxWidth: measure } : undefined}
+      >
         <Reveal>
           <p className={`kicker ${accent === "coral" ? "text-accent-2" : "text-accent"}`}>
             {kicker}

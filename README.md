@@ -28,11 +28,13 @@ script running first.
 All copy lives in typed data files — change these, not the layout:
 
 - `src/data/site.ts` — name, email, links (GitHub, LinkedIn, demos)
-- `src/data/content.ts` — hackathons (which also feed the map) and project cards
+- `src/data/content.ts` — hackathons, which also feed the map
+- `content/projects/*.md` — section 03 project cards, one file per project
+  (`content/projects/README.md` for the format); parsed at build by
+  `src/data/projects.ts`
 
 Sections live in `src/components/sections/` and share the `Section` shell in
-`src/components/ui/`. A hackathon with an `image` is automatically promoted to a
-project card, and the type enforces that it also has a `repo` or `link`.
+`src/components/ui/`.
 
 ## Checking layout
 
