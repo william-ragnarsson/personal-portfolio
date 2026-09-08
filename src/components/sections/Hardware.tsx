@@ -37,7 +37,7 @@ export default function Hardware() {
         <span className="font-medium text-foreground">Start Academy</span>, a
         startup competition we placed{" "}
         <span className="font-medium text-foreground">2nd</span> in, out of 120
-        startups. There was a hard deadline on the video and the whole thing was
+        startups! There was a hard deadline on the video and the whole thing was
         pretty impulsive, so I stayed up until 5:00 AM filming and editing.
       </Prose>
 
