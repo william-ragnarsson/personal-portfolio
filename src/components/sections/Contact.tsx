@@ -20,16 +20,6 @@ function Panel() {
 
       <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
         <a
-          href={`mailto:${site.email}`}
-          className={`${CTA_BASE} bg-accent-2 text-background shadow-[0_10px_30px_rgba(255,90,77,0.28)] hover:shadow-[0_14px_36px_rgba(255,90,77,0.36)]`}
-          onClick={() => capture("contact_link_clicked", { link_type: "email" })}
-        >
-          <Mail className="h-5 w-5" />
-          Send me an email
-          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </a>
-
-        <a
           href={site.linkedin}
           target="_blank"
           rel="noopener noreferrer"
@@ -38,6 +28,16 @@ function Panel() {
         >
           <Linkedin className="h-5 w-5" />
           Connect on LinkedIn
+        </a>
+
+        <a
+          href={`mailto:${site.email}`}
+          className={`${CTA_BASE} bg-accent-2 text-background shadow-[0_10px_30px_rgba(255,90,77,0.28)] hover:shadow-[0_14px_36px_rgba(255,90,77,0.36)]`}
+          onClick={() => capture("contact_link_clicked", { link_type: "email" })}
+        >
+          <Mail className="h-5 w-5" />
+          Send me an email
+          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </a>
 
         <a

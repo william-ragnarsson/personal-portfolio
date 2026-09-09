@@ -11,10 +11,10 @@ import TuneboxGallery from "@/components/TuneboxGallery";
 export default function Hardware() {
   return (
     <Section
-      kicker="04 — Before software"
+      kicker="01 - How I got into startups"
       title={
         <>
-          Tried my own <span className="text-accent">startup</span> in my first
+          Did my own <span className="text-accent">startup</span> in my first
           year of university.
         </>
       }
@@ -23,7 +23,7 @@ export default function Hardware() {
       <TuneboxGallery />
 
       <Prose delay={0.1} className="mt-12">
-        It was <span className="font-medium text-foreground">Tunebox</span>, a
+        <span className="font-medium text-foreground">Tunebox</span>, a
         hardware startup: a more creative, hands-on project than anything
         I&apos;d done before, and the thing that first lit the{" "}
         <span className="font-medium text-foreground">
@@ -33,12 +33,10 @@ export default function Hardware() {
       </Prose>
 
       <Prose delay={0.1} className="mt-5">
-        I made this trailer for{" "}
-        <span className="font-medium text-foreground">Start Academy</span>, a
-        startup competition we placed{" "}
-        <span className="font-medium text-foreground">2nd</span> in, out of 120
-        startups! There was a hard deadline on the video and the whole thing was
-        pretty impulsive, so I stayed up until 5:00 AM filming and editing.
+        We entered the startup competition Start Academy and placed{" "}
+        <span className="font-medium text-foreground">
+          2nd out of 120 startups
+        </span>
       </Prose>
 
       <Prose delay={0.14} className="mt-5">
