@@ -15,10 +15,10 @@ export default function Home() {
       <FloatingShapes />
       <main className="relative">
         <Hero />
+        <Hardware />
         <PlugAndPlay />
         <Hackathons />
         <OtherProjects />
-        <Hardware />
         <WhatsNext />
         <Contact />
       </main>

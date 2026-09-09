@@ -35,7 +35,7 @@ export default function TuneboxGallery() {
       {/* Stands on its own: these photos are a different event from the trailer,
           and the paragraph naming that one comes after this. */}
       <p className="kicker mt-4 text-center text-muted">
-        Pitch day at VLAJO NextGen Fest &rsquo;24 — finalist
+        Pitch day at VLAJO NextGen Fest - finalist
       </p>
     </Reveal>
   );

@@ -10,8 +10,8 @@ export default function Hero() {
       </Reveal>
 
       <Reveal delay={0.08}>
-        <p className="mt-8 max-w-6xl text-2xl font-medium leading-snug text-ink sm:text-3xl">
-          <span className="text-accent-2">US citizen</span>, obsessive learner and love to breakdance
+        <p className="mt-8 text-2xl font-medium leading-snug text-ink sm:text-3xl">
+          <span className="text-accent-2">US citizen</span>, obsessive learner, with a big love startups
 
         </p>
       </Reveal>
