@@ -4,7 +4,6 @@ import VcPreviewSpotlight from "@/components/VcPreviewSpotlight";
 export default function PlugAndPlay() {
   return (
     <Section
-      kicker="02 - Plug and Play Tech Center internship"
       title={
         <>
           Trained an <span className="text-accent">AI VC analyst</span> on a proprietary dataset of 900+

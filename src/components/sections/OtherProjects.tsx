@@ -9,8 +9,6 @@ export default function OtherProjects() {
 
   return (
     <Section
-      kicker="03 — Projects"
-      accent="coral"
       title={
         <>
           Some of my {" "}

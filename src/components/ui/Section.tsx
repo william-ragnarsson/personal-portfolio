@@ -2,10 +2,6 @@ import type { ReactNode } from "react";
 import Reveal from "@/components/Reveal";
 
 type Props = {
-  /** e.g. "01 — Last internship". */
-  kicker: string;
-  /** Which accent the kicker takes. */
-  accent?: "cobalt" | "coral";
   /** Heading content — pass the emphasis spans inline. */
   title: ReactNode;
   children?: ReactNode;
@@ -23,13 +19,11 @@ type Props = {
 };
 
 /**
- * The standard narrative section: measured column, numbered kicker, display
- * heading. Five sections were repeating this shell verbatim, including the
+ * The standard narrative section: measured column and display heading. Five
+ * sections were repeating this shell verbatim, including the
  * `text-[clamp(2rem,5.5vw,3.6rem)]` heading string, so it lives here now.
  */
 export default function Section({
-  kicker,
-  accent = "cobalt",
   title,
   children,
   bleed,
@@ -43,13 +37,7 @@ export default function Section({
         style={measure ? { maxWidth: measure } : undefined}
       >
         <Reveal>
-          <p className={`kicker ${accent === "coral" ? "text-accent-2" : "text-accent"}`}>
-            {kicker}
-          </p>
-        </Reveal>
-
-        <Reveal delay={0.05}>
-          <h2 className="display mt-5 text-[clamp(2rem,5.5vw,3.6rem)] leading-[1.05]">
+          <h2 className="display text-[clamp(2rem,5.5vw,3.6rem)] leading-[1.05]">
             {title}
           </h2>
         </Reveal>

@@ -11,14 +11,9 @@ export default function Hero() {
 
       <Reveal delay={0.08}>
         <p className="mt-8 text-2xl font-medium leading-snug text-ink sm:text-3xl">
-          <span className="text-accent-2">US citizen</span>, obsessive learner, with a big love startups
-
+          Obsessive learner, with a <span className="text-accent-2">big love for startups</span>
         </p>
       </Reveal>
-
-      <p className="kicker mt-20 flex items-center gap-3 text-muted">
-        scroll <span className="inline-block h-px w-12 bg-accent-2" />
-      </p>
     </header>
   );
 }

@@ -11,7 +11,6 @@ import TuneboxGallery from "@/components/TuneboxGallery";
 export default function Hardware() {
   return (
     <Section
-      kicker="01 - How I got into startups"
       title={
         <>
           Did my own <span className="text-accent">startup</span> in my first
