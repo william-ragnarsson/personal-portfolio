@@ -5,8 +5,6 @@ import { mapData } from "@/lib/hackathonMap";
 export default function Hackathons() {
   return (
     <Section
-      kicker="03 — Hackathons"
-      accent="coral"
       title={
         <>
           7 hackathons, <span className="text-accent-2">3 awards</span>!!!

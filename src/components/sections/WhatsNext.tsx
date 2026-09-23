@@ -3,8 +3,6 @@ import Section, { Prose } from "@/components/ui/Section";
 export default function WhatsNext() {
   return (
     <Section
-      kicker="05 — Looking ahead"
-      accent="coral"
       title={
         <>
           The move to <span className="text-accent-2">NYC</span>
