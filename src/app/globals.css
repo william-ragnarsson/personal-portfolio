@@ -137,14 +137,16 @@ body {
   }
 }
 
+/* A title runs the full column, like the text and pictures under it, at every
+   width. `pretty` only keeps a lone word off its last line; words that must
+   stay together, like "3 awards", are joined with a no-break space. */
 .hd {
   margin: 0;
-  max-width: 15.5em;
   font-size: var(--t-hd);
   line-height: 1.03;
   letter-spacing: -0.012em;
   font-weight: 800;
-  text-wrap: balance;
+  text-wrap: pretty;
 }
 
 .hl {
@@ -161,6 +163,38 @@ body {
 .copy strong {
   font-weight: 620;
   color: var(--hl);
+}
+
+/* The startup and Plug and Play have the most to read on the page, so their
+   text is bigger, wider and heavier than elsewhere, with a line's worth of
+   space between paragraphs. */
+.story {
+  --t-p: calc(26 * var(--s));
+}
+
+.story .copy {
+  margin-top: 1em;
+  line-height: 1.45;
+  font-weight: 500;
+  font-stretch: 104%;
+}
+
+.story .copy b {
+  font-weight: 700;
+}
+
+/* Justified, edge to edge. Whatever room a line has left over is spread
+   between every letter, not just between the words: a fraction of a pixel
+   each, where word gaps alone would visibly open up. Hyphenation only splits
+   words of six letters or more, three either side. On a phone the column is
+   too narrow for any of that to stay invisible, so the edge stays ragged. */
+@media (width >= 48rem) {
+  .story .copy {
+    text-align: justify;
+    text-justify: inter-character;
+    hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+  }
 }
 
 .links {

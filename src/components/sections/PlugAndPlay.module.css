@@ -33,19 +33,17 @@
   border-radius: inherit;
 }
 
-/* The pipeline, on one line of prose: its steps are a list, the arrows
-   between them drawn in the highlight colour. */
+/* The pipeline, set like the paragraphs around it (it's a `.copy` too): its
+   steps are a list, in bold, the arrows between them drawn in the highlight
+   colour. */
 .pipe {
-  margin: calc(26 * var(--s)) 0 0;
   padding: 0;
   list-style: none;
-  font-size: var(--t-p);
-  line-height: 1.55;
-  font-weight: 620;
 }
 
 .pipe li {
   display: inline;
+  font-weight: 650;
 }
 
 .pipe li + li::before {

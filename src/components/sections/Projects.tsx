@@ -61,7 +61,7 @@ export default function Projects() {
   return (
     <section id="projects" className="box tone-light" data-tone="light">
       <h2 className="hd">
-        Some of my <span className="hl">other projects</span> :)
+        Some of my <span className="hl">other projects</span>&nbsp;:)
       </h2>
       <p className="copy">Simulators, algorithms, half-finished projects, most of it can be found on my Github!</p>
 

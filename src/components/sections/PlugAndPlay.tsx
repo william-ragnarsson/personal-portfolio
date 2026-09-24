@@ -14,7 +14,7 @@ const PIPELINE = [
 
 export default function PlugAndPlay() {
   return (
-    <section id="plug-and-play" className="box tone-blue sheet" data-tone="blue">
+    <section id="plug-and-play" className="box tone-blue sheet story" data-tone="blue">
       <h2 className="hd">
         Trained an <span className="hl">AI VC analyst</span> on a proprietary dataset of 900+ pitch decks
       </h2>
@@ -40,7 +40,7 @@ export default function PlugAndPlay() {
       <p className="copy">
         The result is an end-to-end VC analyst pipeline that <b>cut down my review-time by 40%</b>.
       </p>
-      <ol className={s.pipe} aria-label="The pipeline">
+      <ol className={`copy ${s.pipe}`} aria-label="The pipeline">
         {PIPELINE.map((step, i) => (
           // Spaces either side of each arrow, so lines can break there.
           <li key={step}>{`${i > 0 ? " " : ""}${step}${i < PIPELINE.length - 1 ? " " : ""}`}</li>
