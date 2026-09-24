@@ -4,10 +4,28 @@
   padding-bottom: calc(64 * var(--s));
 }
 
+/* Everything sits on the centre line; only the composer's rows read from the left. */
 .big {
   max-width: none;
   font-size: min(calc(132 * var(--s)), 17vw);
   line-height: 0.98;
+  text-align: center;
+}
+
+.lead {
+  margin-inline: auto;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Kept whole, so an arrow never wraps onto a line of its own. */
+.lead :global(.link) {
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+.contact :global(.links) {
+  justify-content: center;
 }
 
 /* ── The composer ───────────────────────────────────────────────────────── */
@@ -15,7 +33,7 @@
 .mail {
   position: relative;
   max-width: calc(700 * var(--s));
-  margin-top: calc(40 * var(--s));
+  margin: calc(40 * var(--s)) auto 0;
   padding: calc(6 * var(--s)) calc(32 * var(--s)) calc(30 * var(--s));
   border-radius: calc(24 * var(--s));
   background: var(--lt);
