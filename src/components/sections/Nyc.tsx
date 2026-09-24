@@ -13,12 +13,20 @@ function Heading({ className }: { className?: string }) {
 
 const PARAGRAPHS: ReactNode[] = [
   <>
-    I just finished my Bachelor’s in Computer Science, and{" "}
-    <b>I’m moving to New York City to go all in on startups</b>, chasing that American dream.
+    <b>I’m moving to New York City to go all in on startups.</b> I just finished my Bachelor’s in Computer Science,
+    and I have decided I want to continue my learning in a different way.
   </>,
   <>
-    I want to join a <b>growing team with a LOT ambition</b>. Almost everything I know, I learned by building. So
-    that’s what I want to keep doing: <b>build a lot, build fast and build big!</b>
+    From the moment I learned what a startup even was, I haven’t been able to look away. There’s a{" "}
+    <b>switch in my brain I can’t turn off</b>, that get's me excited when I find a new idea I can work on, or build something that someone mentions has been annoying them.
+  </>,
+  <>
+    {" "}<b>So why move to NYC?</b> The startup scene in Belgium is growing, but it just doesn’t compare to what’s available here. People here work
+    harder, move faster, and have a completely different mindset: one I resonate with much more. I wanted to learn from more experienced people here, so that’s what I’m doing.
+  </>,
+  <>
+    I want to join a <b>growing team with a LOT of ambition</b>. Almost everything I know, I learned by building. So
+    that’s what I want to keep doing: <b>build a lot, build fast, and build big.</b>
   </>,
 ];
 
