@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 
-// The page has ~30 reveal-on-scroll elements. Each one owning its own
-// IntersectionObserver means 30 separate observation contexts for what is the
-// same question asked with the same options — so they all share one here,
-// created lazily and torn down when the last subscriber leaves.
+// Everything that reveals on scroll asks the same question with the same
+// options, so they all share one IntersectionObserver here, created lazily and
+// torn down when the last subscriber leaves.
 
-/** Matches the `.reveal` trigger point: 90px inside the bottom edge. */
+/** Things count as in view once they're 90px inside the bottom edge. */
 const REVEAL_MARGIN_PX = 90;
 
 type Callback = (inView: boolean) => void;

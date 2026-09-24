@@ -1,0 +1,62 @@
+import type { ReactNode } from "react";
+import NycStage from "@/components/globe/NycStage";
+import StillGlobe from "@/components/globe/StillGlobe";
+import s from "@/components/globe/Stage.module.css";
+
+function Heading({ className }: { className?: string }) {
+  return (
+    <h2 className={className ? `hd ${className}` : "hd"}>
+      The move to <span className="hl">NYC</span>
+    </h2>
+  );
+}
+
+const PARAGRAPHS: ReactNode[] = [
+  <>
+    I just finished my Bachelor’s in Computer Science, and{" "}
+    <b>I’m moving to New York City to go all in on startups</b>, chasing that American dream.
+  </>,
+  <>
+    I want to join a <b>growing team with a LOT ambition</b>. Almost everything I know, I learned by building. So
+    that’s what I want to keep doing: <b>build a lot, build fast and build big!</b>
+  </>,
+];
+
+/**
+ * A flight from Belgium, where the hackathons ended, to New York. On the 3D
+ * stage the camera then dives into the land until its yellow is all there is,
+ * and that yellow is the contact page below.
+ */
+export default function Nyc() {
+  return (
+    <section id="nyc" className={`tone-light ${s.section} ${s.nyc}`} data-tone="light">
+      <NycStage className={s.track}>
+        <div className={s.stage} data-stage>
+          <canvas className={s.canvas} data-canvas aria-hidden />
+          <div className={s.col} data-col data-fade>
+            <Heading className={s.stageHd} />
+            {PARAGRAPHS.map((p, i) => (
+              <p key={i} className={s.p}>
+                {p}
+              </p>
+            ))}
+          </div>
+        </div>
+      </NycStage>
+
+      <div className={`box ${s.still}`}>
+        <div className={s.stillBody}>
+          <div>
+            <Heading />
+            {PARAGRAPHS.map((p, i) => (
+              <p key={i} className="copy">
+                {p}
+              </p>
+            ))}
+          </div>
+          <StillGlobe route="nyc" label="A globe with the route from Belgium to New York." className={s.stillGlobe} />
+        </div>
+      </div>
+    </section>
+  );
+}

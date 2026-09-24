@@ -33,10 +33,10 @@ export type Project = {
   slug: string;
   name: string;
   blurb: string;
-  /** The long-form story, one entry per paragraph. */
+  /** The long-form story, one entry per paragraph. `**words**` are highlighted. */
   details: string[];
   stack: string[];
-  /** Promoted to a full editorial feature block. Otherwise a slim list row. */
+  /** Shown on the page as a feature block. The rest are left to GitHub. */
   featured: boolean;
   image: string;
   imageAlt: string;
@@ -45,13 +45,17 @@ export type Project = {
    * Featured projects only; the poster and reduced-motion fallback is `image`.
    */
   video: string | null;
+  /** False until the clip's file is in `public/videos/`: the block shows the poster. */
+  videoReady: boolean;
   /** Which edge of the image survives the tile's crop. */
   focal: FocalPoint;
-  /** Intrinsic size, so the dialog can show the image uncropped. */
+  /** Intrinsic size of the screenshot. */
   width: number;
   height: number;
   href: string;
   linkLabel: "Live demo" | "GitHub";
+  /** The source, when `href` is a live demo. */
+  repo: string | null;
 };
 
 function fail(file: string, message: string): never {
@@ -154,6 +158,7 @@ function readProject(file: string, available: string[]): Project {
   // reduced-motion fallback for a video block, and the list has nothing to fall
   // back to. The video is a separate, optional field.
   let video: string | null = null;
+  let videoReady = false;
   if (data.video != null) {
     if (!featured) {
       fail(file, `video is only for featured projects — add "featured: true" or remove it.`);
@@ -162,9 +167,10 @@ function readProject(file: string, available: string[]): Project {
       fail(file, `video must look like "/videos/${slug}.mp4".`);
     }
     video = data.video;
+    videoReady = existsSync(join(process.cwd(), "public", video));
     // The clip can be added after the copy — warn rather than fail so the block
     // still ships, showing the poster until the file lands.
-    if (!existsSync(join(process.cwd(), "public", video))) {
+    if (!videoReady) {
       console.warn(
         `[projects] ${file}: ${video} isn't in public/videos/ yet — the block ` +
           `shows the poster until it's added.`,
@@ -172,12 +178,22 @@ function readProject(file: string, available: string[]): Project {
     }
   }
 
+  let repo: string | null = null;
+  if (data.repo != null) {
+    if (typeof data.repo !== "string" || !/^https:\/\//.test(data.repo)) {
+      fail(file, `repo must be a full https:// URL, got "${String(data.repo)}".`);
+    }
+    if (linkLabel === "GitHub") {
+      fail(file, `repo is for a project whose href is a live demo; this one's href is already GitHub.`);
+    }
+    repo = data.repo;
+  }
+
   const imageName = resolveImage(file, slug, data.image, available);
   const { width, height } = imageSize(readFileSync(join(IMAGE_DIR, imageName)));
   if (!width || !height) fail(file, `could not read the dimensions of ${imageName}.`);
-  // A video block frames the poster as a square with object-cover; the 16:10
-  // tile-crop warning doesn't describe it.
-  if (!video) warnOnHeavyCrop(imageName, width, height, focal);
+  // An explicit `focal:` is the author choosing the crop, so only nag without one.
+  if (featured && data.focal == null) warnOnHeavyCrop(imageName, width, height, focal);
 
   return {
     slug,
@@ -194,6 +210,8 @@ function readProject(file: string, available: string[]): Project {
     height,
     href: requireString(file, data, "href"),
     linkLabel,
+    repo,
+    videoReady,
   };
 }
 

@@ -1,0 +1,213 @@
+.contact {
+  min-height: 100dvh;
+  padding-top: calc(104 * var(--s));
+  padding-bottom: calc(64 * var(--s));
+}
+
+.big {
+  max-width: none;
+  font-size: min(calc(132 * var(--s)), 17vw);
+  line-height: 0.98;
+}
+
+/* ── The composer ───────────────────────────────────────────────────────── */
+
+.mail {
+  position: relative;
+  max-width: calc(700 * var(--s));
+  margin-top: calc(40 * var(--s));
+  padding: calc(6 * var(--s)) calc(32 * var(--s)) calc(30 * var(--s));
+  border-radius: calc(24 * var(--s));
+  background: var(--lt);
+  color: var(--navy);
+  font-size: max(17px, calc(21 * var(--s)));
+  font-weight: 450;
+}
+
+.f {
+  display: grid;
+  grid-template-columns: calc(86 * var(--s)) minmax(0, 1fr);
+  gap: calc(12 * var(--s));
+  align-items: baseline;
+  padding: calc(19 * var(--s)) 0;
+  border-bottom: 1.5px solid rgb(5 33 68 / 0.12);
+  transition: border-color 0.2s;
+}
+
+.f:focus-within {
+  border-bottom-color: var(--blue);
+}
+
+.f[data-invalid] {
+  border-bottom-color: var(--rust);
+}
+
+.f b {
+  font-weight: 620;
+}
+
+.label {
+  color: var(--slate);
+}
+
+.input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+/* The row's underline is the focus indicator. */
+.input:focus-visible {
+  outline: none;
+}
+
+.input::placeholder {
+  color: #8391a3;
+  opacity: 1;
+}
+
+/* A row of its own, at every width. */
+.f.msg {
+  grid-template-columns: minmax(0, 1fr);
+  border-bottom-color: transparent;
+}
+
+.textarea {
+  display: block;
+  min-height: calc(112 * var(--s));
+  max-height: 50dvh;
+  resize: none;
+  line-height: 1.45;
+  field-sizing: content;
+}
+
+.err {
+  margin: 10px 0 0;
+  font-size: max(14px, calc(16 * var(--s)));
+  font-weight: 550;
+  color: var(--rust);
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: calc(10 * var(--s));
+}
+
+.foot .err {
+  margin: 0;
+  flex: 1 1 14em;
+}
+
+.send {
+  padding: calc(15 * var(--s)) calc(40 * var(--s)) calc(13 * var(--s));
+  border-radius: 999px;
+  background: var(--blue);
+  color: var(--cream);
+  font-stretch: 110%;
+  font-weight: 700;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.send:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.send:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.send:disabled {
+  opacity: 0.75;
+}
+
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ── Sent ───────────────────────────────────────────────────────────────── */
+
+.sent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* The form's height, captured as it was sent. */
+  min-height: calc(var(--h, 360px) - 36 * var(--s));
+}
+
+.sentCanvas {
+  display: block;
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 180px;
+}
+
+:global(html[data-globe="none"]) .sentCanvas {
+  display: none;
+}
+
+.sentText {
+  padding-top: 4px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.sentText[data-in] {
+  opacity: 1;
+}
+
+.sentText:focus {
+  outline: none;
+}
+
+.sentHd {
+  margin: 0;
+  font-size: max(26px, calc(36 * var(--s)));
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.sentP {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.sentP b {
+  font-weight: 620;
+  color: var(--blue);
+}
+
+@media (width < 48rem) {
+  .mail {
+    padding: 2px 20px 22px;
+    border-radius: 20px;
+  }
+  .f {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 8px;
+    padding: 15px 0;
+  }
+  .textarea {
+    min-height: 120px;
+  }
+  .send {
+    padding: 13px 34px 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .send,
+  .sentText {
+    transition: none;
+  }
+}

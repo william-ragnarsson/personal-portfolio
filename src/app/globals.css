@@ -1,163 +1,256 @@
 @import "tailwindcss";
 
-/* ── Paper, Cobalt & Coral (light) ───────────────────────────── */
+/* ── Palette ─────────────────────────────────────────────────────────────
+   Two colours, locked: the blue and the yellow. Everything else is derived
+   from them, and every section picks one of three tones below. */
 :root {
-  --background: #f6f4ee; /* warm paper */
-  --background-soft: #efece3; /* slightly deeper paper for bands */
-  --ink: #16150f; /* near-black text */
-  --foreground: #16150f;
-  --muted: #6b6a60; /* warm grey */
-  --border: #e0ddd2; /* hairline on paper */
-  --accent: #2b5cff; /* cobalt */
-  --accent-2: #ff5a4d; /* coral */
-  --map-bg: #0e1220; /* dark contrast band behind the map */
+  --blue: #0054a2;
+  --yellow: #ffc576;
+  --cream: #fff5e7;
+  --navy: #052144;
+  --deep: #033b7a;
+  --sand: #efdbbd;
+  --mist: #b4cce5;
+  --slate: #54657a;
+  --umber: #5e4a2c;
+  /* Form errors, and nothing else. */
+  --rust: #a8431f;
+  --lt: var(--cream);
+
+  /* ── Scale ──────────────────────────────────────────────────────────────
+     The layout is drawn at 1200px wide. `--s` is one of those pixels at the
+     current width, held between 0.8 and 1.2, so a laptop sees the design as
+     drawn and a big screen gets it a little larger, then centred. */
+  --s: clamp(0.8px, calc(100vw / 1200), 1.2px);
+  --measure: calc(1024 * var(--s));
+  --gx: max(calc(88 * var(--s)), calc((100vw - var(--measure)) / 2));
+
+  --t-hd: calc(64 * var(--s));
+  --t-p: calc(21 * var(--s));
+  --t-link: calc(20 * var(--s));
+  --pad-top: calc(128 * var(--s));
+  --pad-bottom: calc(136 * var(--s));
+  --radius: calc(18 * var(--s));
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-background-soft: var(--background-soft);
-  --color-foreground: var(--foreground);
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
-  --color-map-bg: var(--map-bg);
-  --font-display: var(--font-display-custom);
-  --font-sans: var(--font-sans-custom);
-  --font-mono: var(--font-mono-custom);
-}
-
-html {
-  background: var(--background);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+@media (width < 48rem) {
+  :root {
+    --s: 0.75px;
+    --gx: 22px;
+    --t-hd: 38px;
+    --t-p: 17.5px;
+    --t-link: 17px;
+    --pad-top: 84px;
+    --pad-bottom: 92px;
+    --radius: 14px;
   }
+}
+
+/* A section's tone sets its colours: background, text, highlight (the other
+   locked colour), muted text, and the placeholder behind media. */
+.tone-blue {
+  --bg: var(--blue);
+  --fg: var(--cream);
+  --hl: var(--yellow);
+  --mut: var(--mist);
+  --media: var(--deep);
+}
+.tone-light {
+  --bg: var(--lt);
+  --fg: var(--navy);
+  --hl: var(--blue);
+  --mut: var(--slate);
+  --media: var(--sand);
+}
+.tone-yellow {
+  --bg: var(--yellow);
+  --fg: var(--navy);
+  --hl: var(--blue);
+  --mut: var(--umber);
+  --media: var(--lt);
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────── */
+html {
+  /* PageTone keeps this in step with the scroll position. */
+  background: var(--blue);
+  /* Clip, not hide: hidden would make the body a scroll container and break
+     every sticky stage. */
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-anek), system-ui, sans-serif;
+  /* Weights go through font-weight; font-variation-settings is only for the
+     few places that animate the width axis, since it overrides font-weight
+     for everything below it. */
+  font-weight: 420;
+  color: var(--cream);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* clip horizontal overflow without turning body into a scroll container
-   (that would break framer's useScroll) */
-html {
-  overflow-x: clip;
-}
-
 ::selection {
-  background: var(--accent);
-  color: #ffffff;
+  background: var(--hl, var(--yellow));
+  color: var(--bg, var(--navy));
 }
 
-/* editorial serif display */
-.display {
-  font-family: var(--font-display), Georgia, serif;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1;
+:focus-visible {
+  outline: 2px solid var(--hl, var(--yellow));
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-.kicker {
-  font-family: var(--font-mono), monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+/* ── Shared type ───────────────────────────────────────────────────────── */
+.box {
+  position: relative;
+  background: var(--bg);
+  color: var(--fg);
+  padding: var(--pad-top) var(--gx) var(--pad-bottom);
 }
 
-/* Scroll reveal. The hidden state is server-rendered (data-visible="false"),
-   so there's no flash of visible content before the observer runs; the
-   <noscript> block in layout.tsx un-hides everything when JS is unavailable.
-   Only opacity and transform animate, both compositor properties. */
-.reveal {
-  transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+.hd {
+  margin: 0;
+  max-width: 15.5em;
+  font-size: var(--t-hd);
+  line-height: 1.03;
+  letter-spacing: -0.012em;
+  font-weight: 800;
+  text-wrap: balance;
 }
-.reveal[data-visible="false"] {
+
+.hl {
+  color: var(--hl);
+}
+
+.copy {
+  margin: calc(22 * var(--s)) 0 0;
+  max-width: 34em;
+  font-size: var(--t-p);
+  line-height: 1.55;
+}
+
+.copy b,
+.copy strong {
+  font-weight: 620;
+  color: var(--hl);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(10 * var(--s)) calc(30 * var(--s));
+  margin-top: calc(22 * var(--s));
+  font-size: var(--t-link);
+  font-weight: 650;
+}
+
+.link {
+  color: var(--mut);
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1.5px;
+}
+
+.link[data-primary] {
+  color: var(--hl);
+}
+
+.link:hover {
+  text-decoration-line: underline;
+}
+
+/* A frame for a photo, video or app: rounded, with the tone's placeholder
+   colour showing until the content arrives. */
+.media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--media);
+}
+
+.arrow {
+  display: inline-block;
+  width: 0.72em;
+  height: 0.72em;
+  margin-left: 0.2em;
+  vertical-align: -0.02em;
+  overflow: visible;
+}
+
+/* ── Grain ─────────────────────────────────────────────────────────────── */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background: url("/grain.png") 0 0 / 128px 128px;
+}
+
+/* ── Cursor ────────────────────────────────────────────────────────────── */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  pointer-events: none;
   opacity: 0;
-  transform: translateY(22px);
+  color: var(--cream);
+}
+.cursor[data-on] {
+  opacity: 1;
+}
+.cursor[data-native] {
+  opacity: 0;
+}
+.cursor-ring,
+.cursor-dot {
+  position: absolute;
+  border-radius: 50%;
+}
+.cursor-ring {
+  left: -15px;
+  top: -15px;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid currentColor;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cursor-dot {
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+}
+.cursor[data-link] .cursor-ring {
+  transform: scale(1.45);
+}
+.cursor[data-down] .cursor-ring {
+  transform: scale(0.8);
+}
+
+html[data-cursor="custom"],
+html[data-cursor="custom"] * {
+  cursor: none !important;
+}
+html[data-cursor="custom"] :is(input, textarea, [contenteditable="true"]) {
+  cursor: text !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal,
-  .reveal[data-visible="false"] {
-    opacity: 1;
-    transform: none;
+  .cursor-ring {
     transition: none;
   }
 }
 
-/* Coral halo on an award-winning city card. A static shadow faded with opacity
-   rather than an interpolated box-shadow, so it never repaints mid-scroll. */
-.card-glow {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent-2) 45%, transparent),
-    0 12px 40px -12px color-mix(in srgb, var(--accent-2) 35%, transparent);
-}
-
-/* Project dialog entry. `@starting-style` gives the open transition without a
-   JS "mounted" class — the dialog is mounted and shown in the same tick, so a
-   state-driven class would need a second render to take effect. Only opacity
-   and transform animate. There's no exit transition: the element unmounts. */
-dialog[open] {
-  opacity: 1;
-  transform: scale(1);
-  transition:
-    opacity 0.25s ease-out,
-    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-@starting-style {
-  dialog[open] {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-}
-
-dialog[open]::backdrop {
-  opacity: 1;
-  transition: opacity 0.25s ease-out;
-}
-@starting-style {
-  dialog[open]::backdrop {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  dialog[open],
-  dialog[open]::backdrop {
-    transition: none;
-    transform: none;
-  }
-}
-
-/* map dot pulse */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.85;
-  }
-  80%,
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-}
-.pulse-ring {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: pulse-ring 2.6s ease-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pulse-ring {
-    animation: none;
+@media print {
+  .grain,
+  .cursor {
+    display: none;
   }
 }

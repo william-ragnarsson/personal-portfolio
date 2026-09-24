@@ -1,0 +1,331 @@
+/* The two globe sections, the hackathons and the move to NYC, in both of
+   their versions:
+
+   - the scroll-driven stage, for 3D mode at md and up
+   - the still version, everywhere else: a drawn globe beside or above the text
+
+   Both are in the markup for everyone. Which one shows is decided here from
+   `data-globe` on <html> (see src/lib/mode.ts) and the breakpoint, never by
+   mounting one or the other. */
+
+.section {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.track {
+  display: none;
+}
+
+@media (width >= 48rem) {
+  /* The stage's canvas paints the page colour itself, so there's no second
+     edge behind it to show a seam. */
+  :global(html[data-globe="3d"]) .section {
+    background: transparent;
+  }
+  :global(html[data-globe="3d"]) .track {
+    display: block;
+    /* One screen for the stage itself, plus how far it travels. */
+    height: calc(100dvh * (1 + var(--travel)));
+  }
+  :global(html[data-globe="3d"]) .still {
+    display: none;
+  }
+}
+
+/* ── The stage ──────────────────────────────────────────────────────────── */
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+  container-type: size;
+  /* The text gets whatever the progress bar leaves, and can't push it off
+     the bottom. */
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+/* Inside a stage everything is in pixels of the 1200×750 design, at the
+   stage's size: `--u` for positions, `--ut` for text. Text is kept from
+   shrinking below 0.8 as long as the height has room for it. stage.ts
+   computes the same `u` in JS. */
+.stage > * {
+  --u: clamp(0.6px, min(100cqw / 1200, 100cqh / 750), 1.2px);
+  --ut: max(var(--u), min(0.8px, 100cqh / 750));
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Until the first frame is painted. */
+  background: var(--bg);
+}
+
+.col {
+  grid-row: 1;
+  position: relative;
+  min-height: 0;
+  width: calc(400 * var(--ut));
+  margin-left: calc(88 * var(--u));
+  padding-top: calc(118 * var(--u));
+}
+
+.nyc .col {
+  width: calc(430 * var(--ut));
+}
+
+.stageHd {
+  font-size: calc(56 * var(--ut));
+}
+
+.lead {
+  margin: calc(14 * var(--ut)) 0 0;
+  font-size: calc(19 * var(--ut));
+  line-height: 1.52;
+  color: var(--mut);
+}
+
+.p {
+  margin: calc(22 * var(--ut)) 0 0;
+  font-size: calc(19 * var(--ut));
+  line-height: 1.52;
+}
+
+.p b {
+  font-weight: 620;
+  color: var(--hl);
+}
+
+/* One card per stop, stacked in the same cell. The stage fades the current
+   one in and the others out; only the current one takes the pointer. */
+.cards {
+  display: grid;
+  margin: calc(52 * var(--ut)) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  grid-area: 1 / 1;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.card[data-current] {
+  pointer-events: auto;
+}
+
+.where {
+  margin: 0;
+  font-size: calc(18 * var(--ut));
+  font-weight: 600;
+  color: var(--mut);
+}
+
+.ev {
+  margin: calc(4 * var(--ut)) 0 0;
+  font-size: calc(36 * var(--ut));
+  line-height: 1.08;
+  font-weight: 800;
+}
+
+.prj {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(12 * var(--ut));
+  margin: calc(12 * var(--ut)) 0 0;
+  font-size: calc(20 * var(--ut));
+  font-weight: 650;
+}
+
+.aw {
+  border-radius: 999px;
+  padding: 0.25em 0.875em 0.19em;
+  font-size: 0.8em;
+  font-weight: 700;
+  background: var(--hl);
+  color: var(--bg);
+}
+
+.blurb {
+  margin: calc(10 * var(--ut)) 0 0;
+  font-size: calc(19 * var(--ut));
+  line-height: 1.52;
+}
+
+.card :global(.links) {
+  margin-top: calc(22 * var(--ut));
+  font-size: calc(20 * var(--ut));
+}
+
+.prog {
+  grid-row: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(22 * var(--u));
+  width: calc(400 * var(--ut));
+  margin: 0 0 calc(58 * var(--u)) calc(88 * var(--u));
+}
+
+.ticks {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  gap: calc(6 * var(--u));
+}
+
+.tick {
+  height: calc(5 * var(--u));
+  border-radius: calc(3 * var(--u));
+  overflow: hidden;
+  background: color-mix(in srgb, var(--fg) 15%, transparent);
+}
+
+.tick > b {
+  display: block;
+  height: 100%;
+  background: var(--hl);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.skip {
+  padding: 0.3em 0;
+  font-size: calc(17 * var(--ut));
+  font-weight: 600;
+  color: var(--mut);
+}
+
+.skip:hover {
+  color: var(--fg);
+}
+
+/* Portrait: the globe goes under the text (placeGlobe() switches on the
+   same condition), so the column can take the width. */
+@container (orientation: portrait) {
+  .col,
+  .nyc .col,
+  .prog {
+    width: min(100cqw - 2 * 88 * var(--u), 560 * var(--ut));
+  }
+}
+
+/* ── Still ──────────────────────────────────────────────────────────────── */
+
+.stillBody {
+  display: grid;
+  gap: calc(56 * var(--s));
+  margin-top: calc(48 * var(--s));
+}
+
+.stillGlobe {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1;
+  justify-self: center;
+}
+
+:global(html[data-globe="none"]) .stillGlobe {
+  display: none;
+}
+
+.list {
+  display: grid;
+  gap: calc(72 * var(--s));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  container-type: inline-size;
+}
+
+/* Stretched to fill the line once it scrolls in; see StretchName. Sized so
+   the longest name, "Stockholm", just fits at the narrowest width, so every
+   city can open out to fill (or nearly fill) the column. */
+.city {
+  margin: 0;
+  font-size: min(100cqw / 3.45, 112px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.stretch {
+  display: inline-block;
+  white-space: nowrap;
+  font-variation-settings: "wdth" 75, "wght" 800;
+  transition: font-variation-settings 1.1s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.stretch[data-in] {
+  font-variation-settings: "wdth" var(--fit, 100), "wght" 800;
+}
+
+.item .ev {
+  margin-top: calc(16 * var(--s));
+  font-size: max(22px, calc(30 * var(--s)));
+}
+
+.item .prj {
+  gap: 10px;
+  margin-top: 10px;
+  font-size: max(17px, calc(20 * var(--s)));
+}
+
+.item .blurb {
+  margin-top: 10px;
+  max-width: 34em;
+  font-size: var(--t-p);
+  line-height: 1.55;
+}
+
+.item :global(.links) {
+  margin-top: 16px;
+}
+
+.stillLead {
+  color: var(--mut);
+}
+
+@media (width >= 48rem) {
+  .stillBody {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: calc(64 * var(--s));
+  }
+  .stillBody > :not(.stillGlobe) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .stillGlobe {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: max(24px, calc(50dvh - min(20vw, 280px)));
+  }
+  :global(html[data-globe="none"]) .stillBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* NYC: the text beside the globe, centred on it. */
+  .nyc .stillBody {
+    align-items: center;
+    margin-top: 0;
+  }
+  .nyc .stillGlobe {
+    position: static;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stretch {
+    transition: none;
+    font-variation-settings: "wdth" var(--fit, 100), "wght" 800;
+  }
+}

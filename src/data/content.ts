@@ -18,17 +18,18 @@ type HackathonBase = {
 // Project cards used to be promoted out of this list, which is why entries
 // once carried a screenshot, a stack and a long write-up. That copy now lives
 // in `content/projects/*.md` (see `src/data/projects.ts`), so a hackathon here
-// only needs what the map itself draws.
+// only needs its stop card and where it sits on the globe.
 export type Hackathon = HackathonBase;
 
-// Order = the travel order the map pans through.
+// Order = the order the globe flies through them.
 export const hackathons: Hackathon[] = [
   {
     city: "New York",
     country: "USA",
     event: "vibeFORWARD",
     project: "Placeholder.AI",
-    blurb: "MCP layer that replaces sensitive placeholders with AI-generated placeholder content", // TODO: fill in the real NYC project + blurb
+    blurb:
+      "MCP layer that swaps personal data for placeholders and asks for your approval before anything reaches the AI",
     lat: 40.71,
     lng: -74.0,
     repo: "https://github.com/william-ragnarsson/Placeholder",
@@ -49,7 +50,7 @@ export const hackathons: Hackathon[] = [
     country: "Sweden",
     event: "HackEurope",
     project: "Project Net Zero",
-    blurb: "AI  agent that helps developers refactor legacy code to greener and more energy efficient code",
+    blurb: "AI agent that helps developers refactor legacy code to greener and more energy efficient code",
     lat: 59.33,
     lng: 18.07,
     repo: "https://github.com/william-ragnarsson/project-net-zero-backend",
