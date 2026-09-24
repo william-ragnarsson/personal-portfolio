@@ -74,8 +74,11 @@
   padding-top: calc(118 * var(--u));
 }
 
+/* The NYC text is long, so its column is wider than the hackathons' one. The
+   stage clips whatever runs past its bottom edge: after changing the copy,
+   check it still ends well above the bottom at 1024×600. */
 .nyc .col {
-  width: calc(430 * var(--ut));
+  width: calc(540 * var(--ut));
 }
 
 .stageHd {
