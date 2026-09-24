@@ -15,7 +15,7 @@ const POSITION: Record<FocalPoint, string> = {
   right: "100% 50%",
 };
 
-const SIZES = "(width < 48rem) 100vw, 660px";
+const SIZES = "(width < 48rem) 100vw, 490px";
 
 /** `**words**` in a project's story are highlighted. */
 function inline(text: string): ReactNode[] {

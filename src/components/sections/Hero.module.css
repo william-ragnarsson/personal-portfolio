@@ -11,14 +11,14 @@
   container-type: size;
   --gap: calc(26 * var(--s));
   --hgx: 4.6667cqw;
-  --sub: clamp(19px, 2.6667cqw, 40px);
+  --sub: clamp(19px, 2.6667cqw, 30px);
   /* What Hero.tsx's fit() will choose, in CSS. With W the width between the
-     margins (90.667cqw), the size is 36% of the height when that's the
+     margins (90.667cqw), the size is 31% of the height when that's the
      limit, and otherwise the geometric mean of the size where "William." at
      wdth 75 fills W and the size where "Hi, I'm" at wdth 125 does. That
      mean is replaced by its chord (within a pixel). The constants are those
      two lines' widths in Anek Latin 800: 261.3 and 325.8 at 100px. */
-  --est: min(36cqh, clamp(27.829cqw, 14.683cqw + 17.007cqh, 31.074cqw));
+  --est: min(31cqh, clamp(27.829cqw, 14.683cqw + 14.646cqh, 31.074cqw));
   /* Likewise fit()'s top: the group a little above centre, never nearer the
      top than 7.5%. */
   --top-est: max(7.5cqh, calc((100cqh - 2 * var(--est) - var(--gap) - 2.6 * var(--sub)) * 0.45));

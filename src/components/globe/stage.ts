@@ -41,7 +41,7 @@ export function measureStage(track: HTMLElement): StageBox | null {
   return {
     W,
     H,
-    u: clamp(Math.min(W / 1200, H / 750), 0.6, 1.2),
+    u: clamp(Math.min(W / 1200, H / 750), 0.6, 0.9),
     dpr,
     trackTop: track.getBoundingClientRect().top + window.scrollY,
     stage,
