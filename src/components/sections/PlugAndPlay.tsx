@@ -1,7 +1,7 @@
 import AppPreview from "@/components/AppPreview";
 import Arrow from "@/components/Arrow";
-import TrackedLink, { external } from "@/components/TrackedLink";
 import { site } from "@/data/site";
+import { external } from "@/lib/links";
 import s from "./PlugAndPlay.module.css";
 
 const PIPELINE = [
@@ -22,21 +22,14 @@ export default function PlugAndPlay() {
       <AppPreview src={site.vcDemo} title="the VC analyst" />
 
       <div className="links">
-        <TrackedLink
-          href={site.vcDemo}
-          {...external}
-          className="link"
-          data-primary
-          event="vc_analyst_demo_clicked"
-          properties={{ source: "try_it_out" }}
-        >
+        <a href={site.vcDemo} {...external} className="link" data-primary>
           Try it out yourself
           <Arrow />
-        </TrackedLink>
-        <TrackedLink href={site.vcRepo} {...external} className="link" event="vc_analyst_repo_clicked">
+        </a>
+        <a href={site.vcRepo} {...external} className="link">
           Source
           <Arrow />
-        </TrackedLink>
+        </a>
       </div>
 
       <p className="copy">

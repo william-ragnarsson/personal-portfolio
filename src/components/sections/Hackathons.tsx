@@ -1,11 +1,11 @@
 import type { CSSProperties } from "react";
 import Arrow from "@/components/Arrow";
 import StretchName from "@/components/StretchName";
-import TrackedLink, { external } from "@/components/TrackedLink";
 import HackathonStage from "@/components/globe/HackathonStage";
 import StillGlobe from "@/components/globe/StillGlobe";
 import s from "@/components/globe/Stage.module.css";
 import { hackathons, type Hackathon } from "@/data/content";
+import { external } from "@/lib/links";
 
 const where = (h: Hackathon) => (h.city === h.country ? h.city : `${h.city}, ${h.country}`);
 
@@ -23,35 +23,19 @@ function Heading({ className }: { className?: string }) {
 const LEAD = "Don’t care where, just with whom :)";
 
 function StopLink({ h }: { h: Hackathon }) {
-  const properties = { hackathon_event: h.event, hackathon_city: h.city, project_name: h.project };
   return (
     <div className="links">
       {h.repo ? (
-        <TrackedLink
-          href={h.repo}
-          {...external}
-          className="link"
-          data-primary
-          event="hackathon_repo_clicked"
-          properties={properties}
-          aria-label={`${h.project} on GitHub`}
-        >
+        <a href={h.repo} {...external} className="link" data-primary aria-label={`${h.project} on GitHub`}>
           GitHub
           <Arrow />
-        </TrackedLink>
+        </a>
       ) : null}
       {h.link ? (
-        <TrackedLink
-          href={h.link}
-          {...external}
-          className="link"
-          data-primary
-          event="hackathon_link_clicked"
-          properties={properties}
-        >
+        <a href={h.link} {...external} className="link" data-primary>
           {h.linkLabel ?? "View project"}
           <Arrow />
-        </TrackedLink>
+        </a>
       ) : null}
     </div>
   );

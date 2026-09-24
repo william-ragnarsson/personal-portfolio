@@ -15,7 +15,7 @@ right there.
 - **Anek Latin**, a variable font; its width axis is what stretches the name
 - **The globe** is a WebGL2 fragment shader (`src/lib/globe/`), no 3D library
 - **Resend** sends the contact form's email (plain `fetch`, no SDK)
-- **PostHog** + Vercel Analytics
+- **Vercel Analytics**
 
 ## Run it
 
