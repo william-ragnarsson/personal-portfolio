@@ -8,6 +8,10 @@ import styles from "./Hero.module.css";
 const LINES = ["Hi, I’m", "William."];
 const MIN = 75;
 const MAX = 125;
+/** The widest a line rests at under a mouse: halfway along the axis. */
+const REST = 100;
+/** The name's size at most, as a fraction of the hero's height. */
+const HEIGHT = 0.26;
 
 type Letter = { el: HTMLElement; line: number; cx: number; cy: number; slope: number; p: number; w: number };
 
@@ -19,8 +23,9 @@ const fvs = (wdth: number) => `"wdth" ${wdth.toFixed(2)}, "wght" 800`;
  * Both lines share one size; each gets its own width (the font's `wdth` axis,
  * 75–125) so it reaches the right edge if it can. The name opens from its
  * narrowest once the font is in. Under a mouse, the letters nearest the
- * pointer widen and the rest of the line gives up the room, so its length
- * holds.
+ * pointer swell to the widest and the rest of the line squeezes to give up
+ * the room, so its length holds. For that to have room, a line under a mouse
+ * rests no wider than halfway along the axis.
  *
  * The server renders every letter at wdth 75 with a CSS estimate of the size,
  * which is exactly the animation's first frame: nothing jumps when this takes
@@ -52,7 +57,11 @@ export default function Hero() {
       })),
     );
     const reduce = prefersReducedMotion();
-    const hover = hasFinePointer() && !reduce;
+    // Under a mouse the lines rest at REST at most, reduced motion or not, so
+    // that only changes whether the name moves. A touch screen has nothing to
+    // make room for: there they reach the right edge.
+    const fine = hasFinePointer();
+    const hover = fine && !reduce;
 
     let base = lines.map(() => MIN);
     let fs = 0;
@@ -69,8 +78,9 @@ export default function Hero() {
     let my = 0;
     let disposed = false;
 
+    const rows = lines.map((_, i) => letters.filter((l) => l.line === i));
     const setLine = (i: number, wdth: number) => {
-      for (const l of letters) if (l.line === i) l.el.style.fontVariationSettings = fvs(wdth);
+      for (const l of rows[i]) l.el.style.fontVariationSettings = fvs(wdth);
     };
     const lineWidth = (i: number) => lines[i].getBoundingClientRect().width;
 
@@ -84,7 +94,7 @@ export default function Hero() {
       // One size for both lines, chosen so each can reach the full width
       // somewhere inside the axis range.
       name!.style.fontSize = "100px";
-      let hi = H * 0.31;
+      let hi = H * HEIGHT;
       let lo = 0;
       lines.forEach((_, i) => {
         setLine(i, MIN);
@@ -105,7 +115,7 @@ export default function Hero() {
           if (lineWidth(i) < W) a = m;
           else b = m;
         }
-        return a;
+        return fine ? Math.min(a, REST) : a;
       });
 
       // Each letter's width per unit of wdth, so the hover can widen some and
@@ -143,37 +153,47 @@ export default function Hero() {
       last = now;
       let busy = false;
 
-      const sum = lines.map(() => 0);
-      const weight = lines.map(() => 0);
-      for (const l of letters) {
-        if (hover) {
+      if (hover) {
+        for (const l of letters) {
           const dx = (l.cx - mx) / fs;
           const dy = (l.cy - my) / (fs * 0.85);
           const target = inside ? Math.exp(-(dx * dx + dy * dy)) : 0;
           l.p += (target - l.p) * (1 - Math.exp(-dt * 10));
           if (Math.abs(target - l.p) > 1e-3) busy = true;
         }
-        sum[l.line] += l.slope * l.p;
-        weight[l.line] += l.slope;
       }
 
-      for (const l of letters) {
-        const i = l.line;
+      rows.forEach((row, i) => {
         let b = base[i];
         if (!opened) {
           const e = clamp((now - t0 - 150 - i * 120) / 1100, 0, 1);
           if (e < 1) busy = true;
           b = lerp(MIN, base[i], easeOut3(e));
         }
-        // Push towards the pointer, pull back by the line's weighted mean so
-        // the total width is unchanged.
-        const amp = (MAX - base[i]) * 0.9;
-        const w = clamp(b + amp * (l.p - sum[i] / weight[i]), MIN, MAX);
-        if (Math.abs(w - l.w) > 0.05) {
-          l.w = w;
-          l.el.style.fontVariationSettings = fvs(w);
+        // Push towards the pointer by twice the room above the line, so the
+        // letter under it reaches the widest and its neighbours swell too.
+        // Then pull the whole line back by one offset, found so its total
+        // width is unchanged even where a letter stops at either end of the
+        // axis.
+        const amp = (MAX - base[i]) * 2;
+        const at = (l: Letter, c: number) => clamp(b + amp * (l.p - c), MIN, MAX);
+        let lo = 0;
+        let hi = 1;
+        for (let k = 0; k < 20; k++) {
+          const c = (lo + hi) / 2;
+          let grow = 0;
+          for (const l of row) grow += l.slope * (at(l, c) - b);
+          if (grow > 0) lo = c;
+          else hi = c;
         }
-      }
+        for (const l of row) {
+          const w = at(l, (lo + hi) / 2);
+          if (Math.abs(w - l.w) > 0.05) {
+            l.w = w;
+            l.el.style.fontVariationSettings = fvs(w);
+          }
+        }
+      });
       if (!opened && !busy) opened = true;
       if (busy) raf = requestAnimationFrame(frame);
       else last = 0;
@@ -263,9 +283,7 @@ export default function Hero() {
         ))}
       </h1>
       <p ref={subRef} className={styles.sub}>
-        Obsessive learner, with a
-        <br />
-        <span className={styles.hl}>big love for startups</span>
+        Obsessive learner, with a <span className={styles.hl}>big love for startups</span>
       </p>
     </section>
   );
