@@ -3,7 +3,6 @@
 import { startTransition, useActionState, useRef, useState, type CSSProperties } from "react";
 import { sendMessage } from "@/app/actions";
 import { EMAIL_PATTERN, MESSAGE_MAX, type SendState } from "@/lib/contact";
-import { capture } from "@/lib/analytics";
 import SentFlight from "./SentFlight";
 import s from "./Contact.module.css";
 
@@ -67,7 +66,6 @@ export default function Composer() {
         }
         // The sent screen keeps the form's height, so nothing below it jumps.
         setHeight(formRef.current?.offsetHeight);
-        capture("contact_form_submitted");
         const data = new FormData(e.currentTarget);
         startTransition(() => action(data));
       }}

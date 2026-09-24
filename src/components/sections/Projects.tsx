@@ -2,9 +2,9 @@ import Image, { getImageProps } from "next/image";
 import type { ReactNode } from "react";
 import Arrow from "@/components/Arrow";
 import ProjectClip from "@/components/ProjectClip";
-import TrackedLink, { external } from "@/components/TrackedLink";
 import { getProjects, type FocalPoint, type Project } from "@/data/projects";
 import { site } from "@/data/site";
+import { external } from "@/lib/links";
 import s from "./Projects.module.css";
 
 const POSITION: Record<FocalPoint, string> = {
@@ -40,22 +40,17 @@ function Media({ p }: { p: Project }) {
 }
 
 function Links({ p }: { p: Project }) {
-  const demo = p.linkLabel === "Live demo";
-  const track = (type: "demo" | "repo") => ({
-    event: "project_link_clicked",
-    properties: { project_name: p.name, link_type: type, surface: "feature" },
-  });
   return (
     <div className="links">
-      <TrackedLink href={p.href} {...external} className="link" data-primary {...track(demo ? "demo" : "repo")}>
+      <a href={p.href} {...external} className="link" data-primary>
         {p.linkLabel}
         <Arrow />
-      </TrackedLink>
+      </a>
       {p.repo ? (
-        <TrackedLink href={p.repo} {...external} className="link" {...track("repo")}>
+        <a href={p.repo} {...external} className="link">
           GitHub
           <Arrow />
-        </TrackedLink>
+        </a>
       ) : null}
     </div>
   );
@@ -88,10 +83,10 @@ export default function Projects() {
       ))}
 
       <p className={s.gh}>
-        <TrackedLink href={site.github} {...external} className="link" event="other_projects_github">
+        <a href={site.github} {...external} className="link">
           See the rest on GitHub
           <Arrow />
-        </TrackedLink>
+        </a>
       </p>
     </section>
   );

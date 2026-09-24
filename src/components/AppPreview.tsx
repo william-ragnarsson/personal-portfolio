@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { useResizeEffect } from "@/hooks/useResizeEffect";
-import TrackedLink, { external } from "./TrackedLink";
+import { external } from "@/lib/links";
 import s from "./sections/PlugAndPlay.module.css";
 
 /** The app is laid out at this size and scaled to fit, so it always looks
@@ -38,14 +38,7 @@ export default function AppPreview({ src, title }: { src: string; title: string 
         sandbox="allow-scripts allow-same-origin"
         inert
       />
-      <TrackedLink
-        href={src}
-        {...external}
-        className={s.open}
-        event="vc_analyst_demo_clicked"
-        properties={{ source: "preview" }}
-        aria-label={`Open ${title}`}
-      />
+      <a href={src} {...external} className={s.open} aria-label={`Open ${title}`} />
     </div>
   );
 }

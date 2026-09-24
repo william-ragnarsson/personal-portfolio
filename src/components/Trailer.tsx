@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { capture } from "@/lib/analytics";
 import s from "./sections/Tunebox.module.css";
 
 const VIDEO_ID = "JGS_X_n-Gvs";
@@ -32,14 +31,7 @@ export default function Trailer() {
           allowFullScreen
         />
       ) : (
-        <button
-          type="button"
-          className={s.poster}
-          onClick={() => {
-            capture("tunebox_trailer_played");
-            setPlaying(true);
-          }}
-        >
+        <button type="button" className={s.poster} onClick={() => setPlaying(true)}>
           <Image
             src={`https://i.ytimg.com/vi/${VIDEO_ID}/maxresdefault.jpg`}
             alt=""

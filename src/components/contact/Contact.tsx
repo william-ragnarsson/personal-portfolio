@@ -1,6 +1,6 @@
 import Arrow from "@/components/Arrow";
-import TrackedLink, { external } from "@/components/TrackedLink";
 import { site } from "@/data/site";
+import { external } from "@/lib/links";
 import Composer from "./Composer";
 import s from "./Contact.module.css";
 
@@ -13,43 +13,24 @@ export default function Contact() {
       </h2>
       <p className={`copy ${s.lead}`}>
         Send me a message below, or find me on{" "}
-        <TrackedLink
-          href={site.linkedin}
-          {...external}
-          className="link"
-          data-primary
-          event="contact_link_clicked"
-          properties={{ link_type: "linkedin" }}
-        >
+        <a href={site.linkedin} {...external} className="link" data-primary>
           LinkedIn
           <Arrow />
-        </TrackedLink>{" "}
+        </a>{" "}
         and{" "}
-        <TrackedLink
-          href={site.x}
-          {...external}
-          className="link"
-          data-primary
-          event="contact_link_clicked"
-          properties={{ link_type: "x" }}
-        >
+        <a href={site.x} {...external} className="link" data-primary>
           X
           <Arrow />
-        </TrackedLink>
+        </a>
       </p>
 
       <Composer />
 
       {/* The composer's errors point here: "email me directly below". */}
       <div className="links">
-        <TrackedLink
-          href={`mailto:${site.email}`}
-          className="link"
-          event="contact_link_clicked"
-          properties={{ link_type: "email" }}
-        >
+        <a href={`mailto:${site.email}`} className="link">
           or email me directly
-        </TrackedLink>
+        </a>
       </div>
     </section>
   );
