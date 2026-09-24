@@ -1,6 +1,8 @@
 .vid {
   aspect-ratio: 16 / 9;
   margin-top: calc(48 * var(--s));
+  /* The thumbnail blends with this frame's colour and nothing behind it. */
+  isolation: isolate;
 }
 
 .poster {
@@ -18,8 +20,14 @@
   border-radius: inherit;
 }
 
+/* The thumbnail is the black logo on a lemon of its own, which fights the
+   page's yellow. In grey, pushed until the lemon is white, then multiplied
+   onto the frame's colour (the section's --media), it's the logo on that
+   instead. */
 .thumb {
   object-fit: cover;
+  filter: grayscale(1) brightness(1.25);
+  mix-blend-mode: multiply;
 }
 
 /* Not YouTube's red button: ours, in the corner, and YouTube itself only

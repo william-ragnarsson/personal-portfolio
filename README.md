@@ -1,10 +1,10 @@
 # personal-portfolio
 
 William Ragnarsson's portfolio: one long, scroll-driven page. A blue poster,
-the startup and the Plug and Play work in blue, then the blue folds into a clay
-globe that flies through the hackathons, the projects, a flight to New York,
-and a dive into the yellow contact page, where you can write William an email
-right there.
+the startup on a yellow sheet and the Plug and Play work on a blue one laid
+over it, then the blue folds into a clay globe that flies through the
+hackathons, the projects, a flight to New York, and a dive into the yellow
+contact page, where you can write William an email right there.
 
 ## Stack
 
@@ -33,7 +33,7 @@ the message to the terminal. See [The contact form](#the-contact-form).
 | Section | Component | Tone |
 | --- | --- | --- |
 | Hi, I'm William. | `sections/Hero.tsx` | blue |
-| The startup (Tunebox) | `sections/Tunebox.tsx` | blue |
+| The startup (Tunebox) | `sections/Tunebox.tsx` | yellow |
 | Plug and Play | `sections/PlugAndPlay.tsx` | blue |
 | Hackathons: the blue folds into the globe | `sections/Hackathons.tsx` + `globe/HackathonStage.tsx` | cream |
 | Projects | `sections/Projects.tsx` | cream |
@@ -42,8 +42,10 @@ the message to the terminal. See [The contact form](#the-contact-form).
 
 A section's tone (`tone-blue`, `tone-light`, `tone-yellow` in `globals.css`)
 sets its colours, and `data-tone` tells the custom cursor which colour will
-show up on it (`src/lib/cursorTone.ts`). `PageTone` keeps the colour behind the
-page, and the browser's theme colour on phones, in step with the scroll.
+show up on it (`src/lib/cursorTone.ts`). Tunebox and Plug and Play are also
+`.sheet`s: rounded top corners and a shadow, each laid over the one before.
+`PageTone` keeps the colour behind the page, and the browser's theme colour on
+phones, in step with the scroll.
 
 ### The globe, in three versions
 

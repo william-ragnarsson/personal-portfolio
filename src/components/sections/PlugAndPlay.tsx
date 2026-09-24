@@ -14,7 +14,7 @@ const PIPELINE = [
 
 export default function PlugAndPlay() {
   return (
-    <section id="plug-and-play" className="box tone-blue" data-tone="blue">
+    <section id="plug-and-play" className="box tone-blue sheet" data-tone="blue">
       <h2 className="hd">
         Trained an <span className="hl">AI VC analyst</span> on a proprietary dataset of 900+ pitch decks
       </h2>

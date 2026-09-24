@@ -1,17 +1,23 @@
 .app {
   aspect-ratio: 16 / 10;
   margin-top: calc(48 * var(--s));
+  /* The app card's own corners (40px, less its rim) at the scale it's shown,
+     or the page's radius where that's rounder, so none of its page peeks in. */
+  border-radius: max(var(--radius), calc(39px * var(--k, 0.8)));
 }
 
+/* The app's card is its window's height less its page, so the window is
+   made tall enough that what's left after the crop is 16:10, like the frame:
+   1230 × 768.75, plus AppPreview's 25px cropped off each side. */
 .frame {
   position: absolute;
   left: 0;
   top: 0;
   width: 1280px;
-  height: 800px;
+  height: 818.75px;
   border: 0;
-  /* AppPreview sets --k to the frame's width over 1280. */
-  transform: scale(var(--k, 0.8));
+  /* AppPreview sets --k to the frame's width over the 1230 that show. */
+  transform: scale(var(--k, 0.8)) translate(-25px, -25px);
   transform-origin: 0 0;
   pointer-events: none;
 }

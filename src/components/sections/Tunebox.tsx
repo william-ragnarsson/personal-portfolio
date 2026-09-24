@@ -10,7 +10,7 @@ const PHOTOS = [
 
 export default function Tunebox() {
   return (
-    <section id="tunebox" className="box tone-blue" data-tone="blue">
+    <section id="tunebox" className="box tone-yellow sheet" data-tone="yellow">
       <h2 className="hd">
         Did my own <span className="hl">startup</span> in my first year of university.
       </h2>
