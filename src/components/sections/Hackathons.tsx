@@ -15,7 +15,7 @@ const GLOBE_LABEL = `A globe with the route between the hackathons: ${places.joi
 function Heading({ className }: { className?: string }) {
   return (
     <h2 className={className ? `hd ${className}` : "hd"}>
-      7 hackathons, <span className="hl">3 awards</span>!!!
+      7 hackathons, <span className="hl">3&nbsp;awards</span>!!!
     </h2>
   );
 }

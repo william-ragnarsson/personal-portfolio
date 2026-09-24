@@ -6,7 +6,6 @@
 
 /* Everything sits on the centre line; only the composer's rows read from the left. */
 .big {
-  max-width: none;
   font-size: min(calc(132 * var(--s)), 17vw);
   line-height: 0.98;
   text-align: center;
