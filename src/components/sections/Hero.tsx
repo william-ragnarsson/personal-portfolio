@@ -84,7 +84,7 @@ export default function Hero() {
       // One size for both lines, chosen so each can reach the full width
       // somewhere inside the axis range.
       name!.style.fontSize = "100px";
-      let hi = H * 0.36;
+      let hi = H * 0.31;
       let lo = 0;
       lines.forEach((_, i) => {
         setLine(i, MIN);

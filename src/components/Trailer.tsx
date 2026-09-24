@@ -44,7 +44,7 @@ export default function Trailer() {
             src={`https://i.ytimg.com/vi/${VIDEO_ID}/maxresdefault.jpg`}
             alt=""
             fill
-            sizes="(width < 48rem) 100vw, min(1228px, 86vw)"
+            sizes="(width < 48rem) 100vw, min(922px, 86vw)"
             className={s.thumb}
           />
           <span className={s.play}>Play the trailer</span>

@@ -25,7 +25,7 @@ export default function Tunebox() {
                 src={p.src}
                 alt={p.alt}
                 fill
-                sizes={i === 0 ? "(width < 48rem) 100vw, 420px" : "(width < 48rem) 50vw, 420px"}
+                sizes={i === 0 ? "(width < 48rem) 100vw, 300px" : "(width < 48rem) 50vw, 300px"}
               />
             </div>
           ))}
