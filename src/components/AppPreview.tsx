@@ -1,0 +1,47 @@
+"use client";
+
+import { useRef } from "react";
+import { useResizeEffect } from "@/hooks/useResizeEffect";
+import TrackedLink, { external } from "./TrackedLink";
+import s from "./sections/PlugAndPlay.module.css";
+
+/** The app is laid out at this size and scaled to fit, so it always looks
+ *  like the desktop app rather than reflowing to the frame's width. */
+const APP_W = 1280;
+
+/**
+ * The real app, running, as the picture. It's inert (no focus, no pointer,
+ * hidden from assistive tech) and a link laid over it opens the app itself.
+ */
+export default function AppPreview({ src, title }: { src: string; title: string }) {
+  const box = useRef<HTMLDivElement>(null);
+
+  useResizeEffect(
+    () => {
+      const el = box.current;
+      if (el) el.style.setProperty("--k", (el.clientWidth / APP_W).toFixed(4));
+    },
+    () => [box.current],
+  );
+
+  return (
+    <div ref={box} className={`media ${s.app}`}>
+      <iframe
+        className={s.frame}
+        src={src}
+        title={title}
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin"
+        inert
+      />
+      <TrackedLink
+        href={src}
+        {...external}
+        className={s.open}
+        event="vc_analyst_demo_clicked"
+        properties={{ source: "preview" }}
+        aria-label={`Open ${title}`}
+      />
+    </div>
+  );
+}

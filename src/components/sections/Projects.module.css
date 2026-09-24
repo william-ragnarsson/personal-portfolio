@@ -1,0 +1,107 @@
+/* Three featured projects, image and text alternating sides. */
+.pj {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+  gap: calc(52 * var(--s));
+  align-items: center;
+  margin-top: calc(92 * var(--s));
+}
+
+.pj:nth-of-type(even) {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+}
+
+.pj:nth-of-type(even) > .pim {
+  order: 2;
+}
+
+.pim {
+  aspect-ratio: 16 / 10;
+}
+
+.pim img,
+.pim video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pim video {
+  object-position: var(--pos, 50% 0%);
+}
+
+.name {
+  margin: 0;
+  font-size: max(28px, calc(40 * var(--s)));
+  line-height: 1.05;
+  font-weight: 800;
+}
+
+.blurb {
+  margin: calc(8 * var(--s)) 0 0;
+  font-size: max(16px, calc(18 * var(--s)));
+  line-height: 1.4;
+  font-weight: 550;
+  color: var(--mut);
+}
+
+.pj :global(.copy) {
+  margin-top: calc(14 * var(--s));
+  font-size: max(16.5px, calc(19 * var(--s)));
+}
+
+.stack {
+  margin: calc(16 * var(--s)) 0 0;
+  font-size: max(14px, calc(16 * var(--s)));
+  font-weight: 550;
+  color: var(--mut);
+}
+
+.pj :global(.links) {
+  margin-top: calc(18 * var(--s));
+}
+
+.gh {
+  margin-top: calc(100 * var(--s));
+  padding-top: calc(30 * var(--s));
+  border-top: 1.5px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  text-align: center;
+  font-size: var(--t-link);
+  font-weight: 600;
+}
+
+/* Reduced motion: the clip waits for a press. */
+.clipBtn {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.45em 1em 0.4em 0.85em;
+  border-radius: 999px;
+  background: rgb(5 33 68 / 0.85);
+  color: var(--cream);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.clipBtn::before {
+  content: "";
+  border-left: 0.8em solid var(--yellow);
+  border-block: 0.48em solid transparent;
+}
+
+@media (width < 48rem) {
+  .pj,
+  .pj:nth-of-type(even) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    margin-top: 64px;
+  }
+  .pj:nth-of-type(even) > .pim {
+    order: 0;
+  }
+}

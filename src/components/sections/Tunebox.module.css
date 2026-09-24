@@ -1,0 +1,105 @@
+.vid {
+  aspect-ratio: 16 / 9;
+  margin-top: calc(48 * var(--s));
+}
+
+.poster {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: inherit;
+}
+
+.poster:focus-visible {
+  outline-offset: -6px;
+  border-radius: inherit;
+}
+
+.thumb {
+  object-fit: cover;
+}
+
+/* Not YouTube's red button: ours, in the corner, and YouTube itself only
+   loads once it's pressed. */
+.play {
+  position: absolute;
+  left: calc(28 * var(--s));
+  bottom: calc(28 * var(--s));
+  display: flex;
+  align-items: center;
+  gap: 0.64em;
+  padding: 0.64em 1.27em 0.59em 1em;
+  border-radius: 999px;
+  background: var(--blue);
+  color: var(--cream);
+  font-size: max(16px, calc(22 * var(--s)));
+  font-weight: 650;
+  box-shadow: 0 8px 30px rgb(5 33 68 / 0.3);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.play::before {
+  content: "";
+  margin-top: -0.1em;
+  border-left: 0.91em solid var(--yellow);
+  border-block: 0.55em solid transparent;
+}
+
+.poster:hover .play {
+  transform: scale(1.04);
+}
+
+.poster:active .play {
+  transform: scale(0.97);
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(16 * var(--s));
+  margin: calc(16 * var(--s)) 0 0;
+}
+
+.photo {
+  aspect-ratio: 3 / 2;
+}
+
+.photo img {
+  object-fit: cover;
+}
+
+.caption {
+  margin-top: calc(14 * var(--s));
+  font-size: max(14px, calc(16 * var(--s)));
+  font-weight: 550;
+  color: var(--mut);
+}
+
+@media (width < 48rem) {
+  /* The first photo across the top, the other two under it. */
+  .photos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .photo:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play {
+    transition: none;
+  }
+}
