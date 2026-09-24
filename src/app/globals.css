@@ -111,6 +111,32 @@ body {
   padding: var(--pad-top) var(--gx) var(--pad-bottom);
 }
 
+/* A section laid over the one before it, like a sheet of paper: rounded top
+   corners, and a static shadow cast up onto what it covers. The clip keeps
+   the shadow off the bottom edge, where the next section starts flush. A
+   sheet right after another overlaps it by the corners, so that one keeps
+   its padding clear of them. */
+.sheet {
+  --sheet-r: calc(56 * var(--s));
+  border-radius: var(--sheet-r) var(--sheet-r) 0 0;
+  box-shadow: 0 calc(-10 * var(--s)) calc(44 * var(--s)) rgb(5 33 68 / 0.24);
+  clip-path: inset(calc(-80 * var(--s)) 0 0);
+}
+
+.sheet + .sheet {
+  margin-top: calc(-1 * var(--sheet-r));
+}
+
+.sheet:has(+ .sheet) {
+  padding-bottom: calc(var(--pad-bottom) + var(--sheet-r));
+}
+
+@media (width < 48rem) {
+  .sheet {
+    --sheet-r: 28px;
+  }
+}
+
 .hd {
   margin: 0;
   max-width: 15.5em;

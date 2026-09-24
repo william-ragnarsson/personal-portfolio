@@ -8,6 +8,10 @@ import s from "./sections/PlugAndPlay.module.css";
 /** The app is laid out at this size and scaled to fit, so it always looks
  *  like the desktop app rather than reflowing to the frame's width. */
 const APP_W = 1280;
+/** The app is a rounded card on a page of its own: 24px of that page and a
+ *  1px rim, cropped off each side so only the app shows.
+ *  PlugAndPlay.module.css has the same number. */
+const CROP = 25;
 
 /**
  * The real app, running, as the picture. It's inert (no focus, no pointer,
@@ -19,7 +23,7 @@ export default function AppPreview({ src, title }: { src: string; title: string 
   useResizeEffect(
     () => {
       const el = box.current;
-      if (el) el.style.setProperty("--k", (el.clientWidth / APP_W).toFixed(4));
+      if (el) el.style.setProperty("--k", (el.clientWidth / (APP_W - 2 * CROP)).toFixed(4));
     },
     () => [box.current],
   );

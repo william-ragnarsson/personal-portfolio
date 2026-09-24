@@ -12,8 +12,12 @@ export const STOPS: LatLng[] = hackathons.map((h) => [h.lat, h.lng] as const);
 
 // ── Hackathons ────────────────────────────────────────────────────────────
 
-/** Screens spent folding the blue page into the globe before the first stop. */
-export const HACK_LEAD = 0.75;
+/** Screens the blue page takes to fold into the globe. It starts once the
+ *  stage is pinned, the section above just off the screen: any sooner and
+ *  the stage's top edge shows, turning cream under a section still blue. */
+const FOLD = 1.05;
+/** Screens before the first stop: the fold, then a beat on the whole globe. */
+export const HACK_LEAD = FOLD + 0.05;
 /** Flying in to New York, then a dwell and a leg per stop, then a last dwell. */
 export const HACK_TRAVEL = HACK_LEAD + 3.85;
 const ARRIVE = 0.3;
@@ -89,7 +93,7 @@ export const hackStopAt = (i: number) => HACK_LEAD + ARRIVE + PER_STOP * i + DWE
 
 /** The blue page as a circle shrinking onto the globe, then fading into it. */
 export function hackIris(p: number, coverR: number, globeR: number) {
-  const u = clamp((p + 0.35) / 1.05, 0, 1);
+  const u = clamp(p / FOLD, 0, 1);
   return { r: lerp(coverR, globeR, eio(u)), alpha: 1 - sstep(0.8, 1, u) };
 }
 export const HACK_OVERVIEW_D = OVERVIEW.D;
