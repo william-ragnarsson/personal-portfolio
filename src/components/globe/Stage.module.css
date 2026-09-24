@@ -48,11 +48,11 @@
 }
 
 /* Inside a stage everything is in pixels of the 1200×750 design, at the
-   stage's size: `--u` for positions, `--ut` for text. Text is kept from
-   shrinking below 0.8 as long as the height has room for it. stage.ts
-   computes the same `u` in JS. */
+   stage's size and never above 0.9, like `--s`: `--u` for positions, `--ut`
+   for text. Text is kept from shrinking below 0.8 as long as the height has
+   room for it. stage.ts computes the same `u` in JS. */
 .stage > * {
-  --u: clamp(0.6px, min(100cqw / 1200, 100cqh / 750), 1.2px);
+  --u: clamp(0.6px, min(100cqw / 1200, 100cqh / 750), 0.9px);
   --ut: max(var(--u), min(0.8px, 100cqh / 750));
 }
 
@@ -281,7 +281,6 @@
 
 .item .blurb {
   margin-top: 10px;
-  max-width: 34em;
   font-size: var(--t-p);
   line-height: 1.55;
 }
@@ -308,7 +307,12 @@
     grid-column: 2;
     grid-row: 1;
     position: sticky;
-    top: max(24px, calc(50dvh - min(20vw, 280px)));
+    /* Centred on screen: the globe is as wide as its column, 480 * --s. */
+    top: max(24px, calc(50dvh - min(20vw, 240 * var(--s))));
+  }
+  /* Capped lower than on a phone, in proportion to the headings. */
+  .city {
+    font-size: min(100cqw / 3.45, 84px);
   }
   :global(html[data-globe="none"]) .stillBody {
     grid-template-columns: minmax(0, 1fr);

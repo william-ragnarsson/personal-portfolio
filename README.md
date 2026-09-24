@@ -115,8 +115,8 @@ success and sends nothing.
 
 ## Media
 
-- **Project clip**: `public/videos/double-pendulum.mp4`. It should be 16:10
-  (e.g. 1320×825), H.264, with no audio track, a few seconds long and
+- **Project clip**: `public/videos/double-pendulum.mp4`. It should be square
+  (e.g. 800×800), H.264, with no audio track, a few seconds long and
   seamlessly looping, ideally under 4 MB. Until it's there the block shows the
   screenshot, and the build warns.
 - **Share image**: `src/app/opengraph-image.png` is a 1200×630 screenshot of

@@ -1,14 +1,14 @@
 /* Three featured projects, image and text alternating sides. */
 .pj {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: calc(52 * var(--s));
   align-items: center;
   margin-top: calc(92 * var(--s));
 }
 
 .pj:nth-of-type(even) {
-  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 }
 
 .pj:nth-of-type(even) > .pim {
@@ -16,7 +16,7 @@
 }
 
 .pim {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 1;
 }
 
 .pim img,
@@ -50,6 +50,8 @@
 .pj :global(.copy) {
   margin-top: calc(14 * var(--s));
   font-size: max(16.5px, calc(19 * var(--s)));
+  text-align: justify;
+  hyphens: auto;
 }
 
 .stack {
