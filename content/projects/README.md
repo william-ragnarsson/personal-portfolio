@@ -36,12 +36,12 @@ Second paragraph. Blank lines separate them; there is no limit.
 one: it's the block's picture, and the poster for a `video`.
 
 **`video`** is a looping muted clip in place of the screenshot, served from
-`public/videos/`: 16:10, H.264 `.mp4` (or `.webm`), no audio track. It plays
+`public/videos/`: square, H.264 `.mp4` (or `.webm`), no audio track. It plays
 while it's on screen. Under `prefers-reduced-motion` it waits for a press
 instead. The file can be committed after the copy: until it exists the build
 **warns** (it doesn't fail) and the block shows the screenshot.
 
-**Pictures crop to 16:10.** Most screenshots aren't that shape, so `focal`
+**Pictures crop to a square.** Most screenshots aren't that shape, so `focal`
 picks which edge survives. Without a `focal:` line, `npm run build` warns, by
 filename, whenever the crop cuts more than 12%. Writing one, even
 `focal: top`, the default, says you've looked, and silences it.

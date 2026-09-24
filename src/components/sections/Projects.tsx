@@ -15,7 +15,7 @@ const POSITION: Record<FocalPoint, string> = {
   right: "100% 50%",
 };
 
-const SIZES = "(width < 48rem) 100vw, 490px";
+const SIZES = "(width < 48rem) 100vw, 400px";
 
 /** `**words**` in a project's story are highlighted. */
 function inline(text: string): ReactNode[] {
@@ -25,7 +25,7 @@ function inline(text: string): ReactNode[] {
 function Media({ p }: { p: Project }) {
   const style = { objectPosition: POSITION[p.focal] };
   if (p.video && p.videoReady) {
-    const { props } = getImageProps({ src: p.image, alt: "", width: 1320, height: 825 });
+    const { props } = getImageProps({ src: p.image, alt: "", width: 800, height: 800 });
     return (
       <div className={`media ${s.pim}`} style={{ ["--pos" as string]: POSITION[p.focal] }}>
         <ProjectClip src={p.video} poster={props.src} label={p.imageAlt} />
