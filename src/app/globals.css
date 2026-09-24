@@ -127,7 +127,6 @@ body {
 
 .copy {
   margin: calc(22 * var(--s)) 0 0;
-  max-width: 34em;
   font-size: var(--t-p);
   line-height: 1.55;
 }

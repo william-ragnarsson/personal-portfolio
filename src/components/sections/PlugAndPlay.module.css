@@ -32,7 +32,6 @@
 .pipe {
   margin: calc(26 * var(--s)) 0 0;
   padding: 0;
-  max-width: 34em;
   list-style: none;
   font-size: var(--t-p);
   line-height: 1.55;
