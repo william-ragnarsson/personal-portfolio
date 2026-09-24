@@ -21,8 +21,9 @@ const CONTENT_DIR = join(process.cwd(), "content/projects");
 const IMAGE_DIR = join(process.cwd(), "public/images/projects");
 const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "avif"];
 
-/** The tile's fixed shape. Anything not this ratio gets cropped to fit it. */
-const TILE_RATIO = 16 / 10;
+/** The tile's fixed shape, square (`.pim` in Projects.module.css). Anything not
+ *  this ratio gets cropped to fit it. */
+const TILE_RATIO = 1;
 /** Warn past this much of an image being cut. */
 const CROP_WARNING_THRESHOLD = 0.12;
 
@@ -90,7 +91,7 @@ function resolveImage(file: string, slug: string, override: unknown, available: 
 
 /**
  * Screenshots come in whatever shape the window was, and the tile is a fixed
- * 16:10 — so most of them lose an edge. Say so at build time, naming the file
+ * square — so most of them lose an edge. Say so at build time, naming the file
  * and the amount, rather than leaving it to be noticed on the page. A warning,
  * not an error: cropping hard is sometimes the right answer.
  */
@@ -102,7 +103,7 @@ function warnOnHeavyCrop(name: string, width: number, height: number, focal: Foc
 
   const edge = wide ? "the sides" : focal === "top" ? "the bottom" : `the ${focal} side`;
   console.warn(
-    `[projects] ${name} is ${width}x${height} (${ratio.toFixed(2)}:1). The 16:10 tile ` +
+    `[projects] ${name} is ${width}x${height} (${ratio.toFixed(2)}:1). The square tile ` +
       `crops ${Math.round(lost * 100)}% off ${edge}. Set "focal:" to choose what survives, ` +
       `or re-crop the file.`,
   );
