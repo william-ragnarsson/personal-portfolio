@@ -46,3 +46,6 @@ next-env.d.ts
 # generates public/map-dots.svg, so it stays tracked.
 /scripts/lib/
 /scripts/check-*.mjs
+
+.agents/
+skills-lock.json
