@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { clamp, easeOut3, lerp } from "@/lib/globe/math";
+import { clamp } from "@/lib/globe/math";
 import { hasFinePointer, prefersReducedMotion } from "@/lib/mode";
 import styles from "./Hero.module.css";
 
 const LINES = ["Hi, I’m", "William."];
 const MIN = 75;
 const MAX = 125;
-/** The widest a line rests at under a mouse: halfway along the axis. */
+/** The widest a line rests at under a mouse: halfway along the axis. Same as `--rest` in the CSS. */
 const REST = 100;
 /** The name's size at most, as a fraction of the hero's height. */
 const HEIGHT = 0.26;
@@ -21,17 +21,16 @@ const fvs = (wdth: number) => `"wdth" ${wdth.toFixed(2)}, "wght" 800`;
  * The opening poster: "Hi, I'm / William." stretched across the screen.
  *
  * Both lines share one size; each gets its own width (the font's `wdth` axis,
- * 75–125) so it reaches the right edge if it can. The name opens from its
- * narrowest once the font is in. Under a mouse, the letters nearest the
- * pointer swell to the widest and the rest of the line squeezes to give up
- * the room, so its length holds. For that to have room, a line under a mouse
- * rests no wider than halfway along the axis.
+ * 75–125) so it reaches the right edge if it can. Under a mouse, the letters
+ * nearest the pointer swell to the widest and the rest of the line squeezes to
+ * give up the room, so its length holds. For that to have room, a line under a
+ * mouse rests no wider than halfway along the axis.
  *
- * The server renders every letter at wdth 75 with a CSS estimate of the size,
- * which is exactly the animation's first frame: nothing jumps when this takes
- * over. Changing `font-variation-settings` re-lays out text, the one exception
- * to "transform and opacity only" on this page; `contain` keeps that layout
- * inside the heading.
+ * The name doesn't animate in. The server renders it at CSS estimates of the
+ * size and of each line's width, within a pixel of what fit() measures, so
+ * nothing moves when this takes over. Changing `font-variation-settings`
+ * re-lays out text, the one exception to "transform and opacity only" on this
+ * page; `contain` keeps that layout inside the heading.
  */
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -69,8 +68,6 @@ export default function Hero() {
     let fitW = 0;
     let fitH = 0;
     let heroTop = 0;
-    let opened = reduce;
-    let t0 = 0;
     let raf = 0;
     let last = 0;
     let inside = false;
@@ -143,39 +140,31 @@ export default function Hero() {
       const gap = sub!.offsetTop - name!.offsetTop - 2 * fs;
       const top = Math.max(H * 0.075, (H - 2 * fs - gap - sub!.offsetHeight) * 0.45);
       hero!.style.setProperty("--top", `${top}px`);
-
-      if (!opened) lines.forEach((_, i) => setLine(i, MIN));
     }
 
+    // Only runs under a mouse: the pointer is all that moves the name.
     function frame(now: number) {
       raf = 0;
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
       let busy = false;
 
-      if (hover) {
-        for (const l of letters) {
-          const dx = (l.cx - mx) / fs;
-          const dy = (l.cy - my) / (fs * 0.85);
-          const target = inside ? Math.exp(-(dx * dx + dy * dy)) : 0;
-          l.p += (target - l.p) * (1 - Math.exp(-dt * 10));
-          if (Math.abs(target - l.p) > 1e-3) busy = true;
-        }
+      for (const l of letters) {
+        const dx = (l.cx - mx) / fs;
+        const dy = (l.cy - my) / (fs * 0.85);
+        const target = inside ? Math.exp(-(dx * dx + dy * dy)) : 0;
+        l.p += (target - l.p) * (1 - Math.exp(-dt * 10));
+        if (Math.abs(target - l.p) > 1e-3) busy = true;
       }
 
       rows.forEach((row, i) => {
-        let b = base[i];
-        if (!opened) {
-          const e = clamp((now - t0 - 150 - i * 120) / 1100, 0, 1);
-          if (e < 1) busy = true;
-          b = lerp(MIN, base[i], easeOut3(e));
-        }
+        const b = base[i];
         // Push towards the pointer by twice the room above the line, so the
         // letter under it reaches the widest and its neighbours swell too.
         // Then pull the whole line back by one offset, found so its total
         // width is unchanged even where a letter stops at either end of the
         // axis.
-        const amp = (MAX - base[i]) * 2;
+        const amp = (MAX - b) * 2;
         const at = (l: Letter, c: number) => clamp(b + amp * (l.p - c), MIN, MAX);
         let lo = 0;
         let hi = 1;
@@ -194,7 +183,6 @@ export default function Hero() {
           }
         }
       });
-      if (!opened && !busy) opened = true;
       if (busy) raf = requestAnimationFrame(frame);
       else last = 0;
     }
@@ -221,13 +209,11 @@ export default function Hero() {
       if (pending || disposed) return;
       pending = requestAnimationFrame(() => {
         pending = 0;
-        opened = true;
         fit();
-        lines.forEach((_, i) => setLine(i, base[i]));
       });
     };
-    // A ResizeObserver also reports once when it starts observing. Only a
-    // real change in size refits: refitting cuts the open animation short.
+    // A ResizeObserver also reports once when it starts observing, just after
+    // the first fit. Only a real change in size refits.
     const observer = new ResizeObserver(() => {
       if (hero.clientWidth !== fitW || hero.clientHeight !== fitH) refit();
     });
@@ -246,9 +232,6 @@ export default function Hero() {
       if (disposed) return;
       realFont = document.fonts.check(font);
       fit();
-      t0 = performance.now();
-      if (opened) lines.forEach((_, i) => setLine(i, base[i]));
-      else kick();
       observer.observe(hero);
       document.fonts.addEventListener("loadingdone", fontArrived);
       if (hover) {

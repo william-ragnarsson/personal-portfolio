@@ -1,7 +1,7 @@
 /* The opening poster. Sizes are fractions of the hero itself (a size
    container), so the composition holds at any window shape. The script refines
-   `--fs` and `--top`; until it runs, these estimates put the lines where the
-   open animation starts from. */
+   `--fs`, `--top` and each line's width; until it runs, these estimates put
+   the name where the script will, so nothing moves when it takes over. */
 .hero {
   position: relative;
   height: 100svh;
@@ -22,6 +22,20 @@
   /* Likewise fit()'s top: the group a little above centre, never nearer the
      top than 7.5%. The subtitle is one line, or two on a narrow screen. */
   --sub-lines: 1;
+  /* And its widths (see .ch), from how wide a line has to be at 100px to
+     fill W at that size. CSS can't divide one length by another, but
+     `tan(atan2(a, b))` is a / b. */
+  --need: calc(100 * tan(atan2(90.667cqw, var(--est))));
+  /* The widest a line rests at. Under a mouse it's halfway along the axis
+     (REST in Hero.tsx), to leave the hover room to swell. */
+  --rest: 125;
+}
+
+/* FINE_POINTER_QUERY in src/lib/mode.ts, which is what Hero.tsx checks. */
+@media (hover: hover) and (pointer: fine) {
+  .hero {
+    --rest: 100;
+  }
 }
 
 .name,
@@ -54,14 +68,29 @@
   contain: layout style;
 }
 
+/* Each line's width in Anek Latin 800 at 100px, at wdth 75 and at 125. In
+   between it's all but linear. */
 .line {
   display: block;
   width: max-content;
   white-space: pre;
+  /* "Hi, I'm" */
+  --at75: 195.5;
+  --at125: 325.8;
 }
 
+.line + .line {
+  /* "William." */
+  --at75: 261.3;
+  --at125: 426.4;
+}
+
+/* fit()'s width for the line: where on the axis it fills W, but no wider than
+   --rest. */
 .ch {
-  font-variation-settings: "wdth" 75, "wght" 800;
+  font-variation-settings:
+    "wdth" clamp(75, 75 + 50 * (var(--need) - var(--at75)) / (var(--at125) - var(--at75)), var(--rest)),
+    "wght" 800;
 }
 
 .sub {

@@ -124,11 +124,10 @@ success and sends nothing.
   changes, run `npm run build && npm run start`, then retake it with Chrome:
 
   ```bash
-  chrome --headless --hide-scrollbars --force-prefers-reduced-motion --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=9000 --screenshot=src/app/opengraph-image.png http://localhost:3000/
+  chrome --headless --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=9000 --screenshot=src/app/opengraph-image.png http://localhost:3000/
   ```
 
-  `chrome` is your Chrome binary. `--force-prefers-reduced-motion` skips the
-  opening animation, so the name is captured at its final width.
+  `chrome` is your Chrome binary.
 
 ## Checking layout
 
