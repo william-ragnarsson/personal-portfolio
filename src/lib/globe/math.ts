@@ -33,7 +33,6 @@ export const sstep = (a: number, b: number, x: number) => {
 export const s5 = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
 /** Cubic ease-in-out, for the blue page folding into the globe. */
 export const eio = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-export const easeOut3 = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /** A point on the unit sphere. */
 export const v3 = (lat: number, lng: number): Vec3 => [

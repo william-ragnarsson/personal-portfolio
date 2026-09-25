@@ -147,13 +147,14 @@
   font-weight: 650;
 }
 
+/* An award is yellow, whatever the section's tone. */
 .aw {
   border-radius: 999px;
   padding: 0.25em 0.875em 0.19em;
   font-size: 0.8em;
   font-weight: 700;
-  background: var(--hl);
-  color: var(--bg);
+  background: var(--yellow);
+  color: var(--navy);
 }
 
 .blurb {
