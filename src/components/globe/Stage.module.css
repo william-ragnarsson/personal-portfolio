@@ -69,7 +69,8 @@
   grid-row: 1;
   position: relative;
   min-height: 0;
-  width: calc(400 * var(--ut));
+  /* Wide enough for "Love hackathons," on one line (about 427 units). */
+  width: calc(440 * var(--ut));
   margin-left: calc(88 * var(--u));
   padding-top: calc(118 * var(--u));
 }
@@ -218,6 +219,9 @@
   .nyc .col,
   .prog {
     width: min(100cqw - 2 * 88 * var(--u), 560 * var(--ut));
+    /* Centred over the globe, which placeGlobe() centres in the stage. */
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
