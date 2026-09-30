@@ -52,7 +52,8 @@ the screens scrolled since the track reached the top, into a frame (camera,
 card, pins, progress), as pure functions. So the same `p` is the same frame at
 every window size, and the card for a stop shows at the same point of the scroll
 however tall the window is. Keep timelines pure: anything that depends on the
-window belongs in the measurement pass, not in `p`.
+window belongs in the measurement pass, not in `p`. The projects index is the
+same, with `src/lib/projectSteps.ts` as its timeline.
 
 ### `dvh`, not `vh`
 
@@ -68,6 +69,14 @@ contents run into the next section. The stages are `height: 100dvh` with
 progress bar its row first, so no combination of content can push past the
 bottom. The globe is placed in whatever room the text leaves, and shrinks to
 fit it.
+
+The projects index can't shrink its text, so it checks instead:
+`ProjectsStage` lays itself out pinned at `100svh`, the smallest the window
+gets, and pins only if everything ends inside. Otherwise it stays a list.
+Until it has measured, its track keeps the height it has pinned: a reload
+restores the scroll position before any script runs, and if pinning then
+changed the page's height, the browser's scroll anchoring would carry the
+reader past the section.
 
 ### Measure once per frame, in one pass
 

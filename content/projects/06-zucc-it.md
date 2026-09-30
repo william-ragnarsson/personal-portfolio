@@ -5,7 +5,6 @@ alt: "ZUCC.IT dashboard scoring a meeting on tempo, confidence, politeness and s
 href: "https://github.com/william-ragnarsson/Team-zucc"
 linkLabel: GitHub
 stack: [Whisper, LLM analysis, React, Python]
-focal: top
 ---
 
 Built at BCG Platinion's Berlin hackathon. ZUCC.IT sits in on a meeting, transcribes it, and scores the conversation on tempo, confidence, politeness and structure.

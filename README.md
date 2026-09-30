@@ -36,7 +36,7 @@ the message to the terminal. See [The contact form](#the-contact-form).
 | The startup (Tunebox) | `sections/Tunebox.tsx` | yellow |
 | Plug and Play | `sections/PlugAndPlay.tsx` | blue |
 | Hackathons: the blue folds into the globe | `sections/Hackathons.tsx` + `globe/HackathonStage.tsx` | cream |
-| Projects | `sections/Projects.tsx` | cream |
+| Projects: an index the page scrolls through | `sections/Projects.tsx` + `ProjectsStage.tsx` | cream |
 | The move to NYC: flight, dive | `sections/Nyc.tsx` + `globe/NycStage.tsx` | cream |
 | Let's Talk! | `contact/Contact.tsx` | yellow |
 
@@ -115,10 +115,12 @@ success and sends nothing.
 
 ## Media
 
-- **Project clip**: `public/videos/double-pendulum.mp4`. It should be square
-  (e.g. 800×800), H.264, with no audio track, a few seconds long and
-  seamlessly looping, ideally under 4 MB. Until it's there the block shows the
-  screenshot, and the build warns.
+- **Project clips**: `public/videos/<slug>.mp4`, named by a project's
+  `video:` field. H.264, no audio track, seamlessly looping, ideally under
+  5 MB, and the same shape as the project's picture, which is its poster.
+  Until the file is there the page shows the picture, and the build warns.
+  `jev-events.mp4` was recorded frame by frame from the live site's hero;
+  `double-pendulum.mp4` is the phase-map render.
 - **Share image**: `src/app/opengraph-image.png` is a 1200×630 screenshot of
   the hero, with its alt text in `opengraph-image.alt.txt`. If the hero
   changes, run `npm run build && npm run start`, then retake it with Chrome:
@@ -141,10 +143,15 @@ changing anything responsive, check these by hand at **320×568, 390×844,
   globe moves under the text.
 - scroll through the hackathons stage slowly: every card shows at its stop,
   and the progress bar and Skip stay put
+- scroll through the projects slowly: each one shows in turn, its name marked
+  and its bar filling, and every picture is whole, at its own shape. Where
+  the stage can't fit (small phones, a phone on its side) they're a list
+  instead.
 - **drag** the window width slowly through 768px, don't just jump: the stages
   must switch to the list and back without jumping
 - scroll down fast, then reload mid-page: every section must still be visible,
-  not stuck invisible
+  not stuck invisible, and a reload inside the projects comes back on the
+  same project
 - with reduced motion on (in the OS, or in DevTools → Rendering), you get the
   still version
 
@@ -155,4 +162,3 @@ responsive.
 
 - Confirm the **LinkedIn URL** in `src/data/site.ts` (currently a guess).
 - Set up **Resend** (above), or the form won't send in production.
-- Add **`public/videos/double-pendulum.mp4`** (spec above).

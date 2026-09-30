@@ -5,7 +5,6 @@ alt: "Nora.ai reviewing a frame of surgical training footage, with flagged error
 href: "https://github.com/william-ragnarsson/DataForGoodChallenge"
 linkLabel: GitHub
 stack: [Computer vision, PyTorch, Next.js]
-focal: top
 ---
 
 Surgical training footage is long, and the mistakes worth learning from are seconds wide. Finding them is exactly the work a supervising surgeon has no time for.
