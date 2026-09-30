@@ -1,4 +1,4 @@
-import AppPreview from "@/components/AppPreview";
+import Image from "next/image";
 import Arrow from "@/components/Arrow";
 import { site } from "@/data/site";
 import { external } from "@/lib/links";
@@ -19,7 +19,20 @@ export default function PlugAndPlay() {
         Trained an <span className="hl">AI VC analyst</span> on a proprietary dataset of 900+ pitch decks
       </h2>
 
-      <AppPreview src={site.vcDemo} title="the VC analyst" />
+      <div className={`media ${s.app}`}>
+        <Image
+          src="/images/vc-analyst.webp"
+          alt="The VC analyst's home page: “Have your deck reviewed by a VC. Before you pitch.”, a drop zone for a pitch deck, and a due-diligence table scoring a sample company"
+          fill
+          sizes="(width < 48rem) 100vw, 920px"
+        />
+        <a href={site.vcDemo} {...external} className="media-link" aria-label="Open the VC analyst">
+          <span className="media-chip" aria-hidden>
+            Try it out
+            <Arrow />
+          </span>
+        </a>
+      </div>
 
       <div className="links">
         <a href={site.vcDemo} {...external} className="link" data-primary>

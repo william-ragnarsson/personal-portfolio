@@ -5,7 +5,6 @@ alt: "The resume generator's upload screen, with a template picker and a LinkedI
 href: "https://github.com/william-ragnarsson/dev-resume-generator"
 linkLabel: GitHub
 stack: [Claude API, LaTeX, Next.js, GitHub API]
-focal: top
 ---
 
 Most résumé builders make you retype work you have already done. Your commit history already describes it, and so does your LinkedIn export — the information exists, it just isn't in the right shape.

@@ -1,26 +1,50 @@
-/* Three featured projects, image and text alternating sides. */
-.pj {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: calc(52 * var(--s));
-  align-items: center;
-  margin-top: calc(92 * var(--s));
+/* The projects, as an index the page scrolls through. The stage pins to the
+   screen; the names across its top are the index, like tabs, and under them
+   the project being scrolled through shows its picture and story. Every
+   project is stacked in the same place, so nothing moves as they change
+   over; they only fade.
+
+   ProjectsStage pins it (`data-pin` on the track) only where it has room.
+   Anywhere else, and until it's measured, the same markup is a list: one
+   project after another. */
+
+.root {
+  --rule: color-mix(in srgb, var(--fg) 16%, transparent);
+  background: var(--bg);
+  color: var(--fg);
 }
 
-.pj:nth-of-type(even) {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+.root > .intro {
+  padding-bottom: 0;
 }
 
-.pj:nth-of-type(even) > .pim {
-  order: 2;
+.root > .outro {
+  padding-top: 0;
 }
 
-.pim {
-  aspect-ratio: 1;
+/* ── The list ─────────────────────────────────────────────────────────── */
+
+.stage {
+  padding: max(44px, calc(64 * var(--s))) var(--gx) 0;
 }
 
-.pim img,
-.pim video {
+.nav {
+  display: none;
+}
+
+.panel + .panel {
+  margin-top: max(56px, calc(96 * var(--s)));
+}
+
+/* The frame takes the picture's own shape (`--ar`, its width over its
+   height), so nothing is cropped. In the list it's as wide as the column,
+   short of growing taller than a set height. */
+.frame {
+  width: min(100%, calc(var(--ar) * max(280px, calc(440 * var(--s)))));
+  aspect-ratio: var(--ar);
+}
+
+.frame > :is(img, video) {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -28,30 +52,45 @@
   object-fit: cover;
 }
 
-.pim video {
-  object-position: var(--pos, 50% 0%);
+.story {
+  margin-top: max(20px, calc(28 * var(--s)));
+}
+
+.idx {
+  margin: 0;
+  font-size: max(14px, calc(17 * var(--s)));
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: var(--hl);
+  font-variant-numeric: tabular-nums;
 }
 
 .name {
-  margin: 0;
+  margin: calc(6 * var(--s)) 0 0;
   font-size: max(28px, calc(40 * var(--s)));
   line-height: 1.05;
   font-weight: 800;
 }
 
+/* What the project is leads its story. Like the page's titles (`.hd`), it
+   runs the full width of the text under it: `pretty` only keeps a lone word
+   off its last line, where `balance` would even its lines out to half the
+   width. */
 .blurb {
-  margin: calc(8 * var(--s)) 0 0;
-  font-size: max(16px, calc(18 * var(--s)));
-  line-height: 1.4;
-  font-weight: 550;
-  color: var(--mut);
+  margin: max(8px, calc(10 * var(--s))) 0 0;
+  font-size: max(20px, calc(26 * var(--s)));
+  line-height: 1.22;
+  font-weight: 700;
+  text-wrap: pretty;
 }
 
-.pj :global(.copy) {
+.story > :global(.copy) {
   margin-top: calc(14 * var(--s));
   font-size: max(16.5px, calc(19 * var(--s)));
-  text-align: justify;
-  hyphens: auto;
+}
+
+.blurb + :global(.copy) {
+  margin-top: max(12px, calc(18 * var(--s)));
 }
 
 .stack {
@@ -61,22 +100,260 @@
   color: var(--mut);
 }
 
-.pj :global(.links) {
+.story :global(.links) {
   margin-top: calc(18 * var(--s));
 }
 
+@media (width >= 48rem) {
+  .panel {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: start;
+    column-gap: calc(48 * var(--s));
+  }
+  .frame {
+    width: 100%;
+  }
+  .story {
+    margin-top: 0;
+  }
+  /* Justified like the rest of the page's stories (globals.css). */
+  .story > :global(.copy) {
+    text-align: justify;
+    text-justify: inter-character;
+    hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+  }
+}
+
 .gh {
-  margin-top: calc(100 * var(--s));
+  margin-top: max(56px, calc(96 * var(--s)));
   padding-top: calc(30 * var(--s));
-  border-top: 1.5px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  border-top: 1.5px solid var(--rule);
   text-align: center;
   font-size: var(--t-link);
   font-weight: 600;
 }
 
-/* Reduced motion: the clip waits for a press. */
+/* ── The stage ────────────────────────────────────────────────────────── */
+
+/* One screen for the stage itself, plus how far it travels. */
+.track[data-pin] {
+  height: calc(100dvh * (1 + var(--travel)));
+}
+
+/* Until ProjectsStage has measured, the track keeps that room. A reload
+   restores its scroll position before then, and this way pinning moves
+   nothing under it, so the page comes back on the same project. Only where
+   scripts run: the inline script in <head> sets `data-globe`. */
+:root[data-globe] .track:not([data-measured]) {
+  min-height: calc(100dvh * (1 + var(--travel)));
+}
+
+.track[data-pin] .stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+  container: projects / size;
+  padding: max(24px, calc(56 * var(--s))) var(--gx) max(24px, calc(48 * var(--s)));
+}
+
+/* While ProjectsStage checks it fits: at the smallest height the window
+   gets, a phone's with its toolbars showing. */
+.track[data-fit] .stage {
+  height: 100svh;
+}
+
+/* The names in a row across the top, and under them the project: its
+   picture, and its story beside it. The picture's row is the tallest
+   picture at the column's width, less whatever the height can't spare. The
+   story is left out of sizing the rows (`contain`), so a long one can't push
+   the picture out; ProjectsStage checks it still ends inside the stage. */
+.track[data-pin] .grid {
+  --rg: max(20px, calc(32 * var(--s)));
+  --cg: max(20px, calc(48 * var(--s)));
+  --col: calc((100cqw - var(--cg)) * 5 / 12);
+  display: grid;
+  height: 100%;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-rows: auto minmax(0, calc(var(--col) / var(--ar-min)));
+  grid-template-areas:
+    "nav nav"
+    "pic story";
+  align-content: center;
+  gap: max(28px, calc(48 * var(--s))) var(--cg);
+}
+
+/* A column for each name, all as wide. */
+.track[data-pin] .nav {
+  grid-area: nav;
+  container-type: inline-size;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--cg);
+}
+
+.track[data-pin] .panel {
+  display: contents;
+}
+
+.track[data-pin] .pic {
+  grid-area: pic;
+  min-height: 0;
+  container-type: size;
+}
+
+.track[data-pin] .frame {
+  width: min(100cqw, calc(100cqh * var(--ar)));
+}
+
+.track[data-pin] .story {
+  grid-area: story;
+  margin: 0;
+  contain: size;
+}
+
+/* The names say which it is. The heading stays for screen readers. */
+.track[data-pin] .idx {
+  display: none;
+}
+
+.track[data-pin] .name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.track[data-pin] .blurb {
+  margin: 0;
+  font-size: max(21px, calc(30 * var(--s)));
+  line-height: 1.2;
+}
+
+/* Where the window and the stage are both taller than wide, the story goes
+   under the picture, as wide as the stage. (A big monitor's stage is taller
+   than wide as well, its width stopping at the measure, but its window
+   isn't, and there the story stays beside, as on any other desktop.) The
+   pictures' row is the tallest one at that width, short of a bit over a
+   third of the stage, and gives up whatever the stories need. A picture that
+   comes out narrower than the stage is centred in its row. Every story
+   starts on the line under it. */
+@media (orientation: portrait) {
+  @container projects (orientation: portrait) {
+    .track[data-pin] .grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, min(36cqh, calc(100cqw / var(--ar-min)))) auto;
+      grid-template-areas:
+        "nav"
+        "pic"
+        "story";
+      row-gap: var(--rg);
+    }
+    .track[data-pin] .frame {
+      margin-inline: auto;
+    }
+    .track[data-pin] .story {
+      contain: none;
+    }
+  }
+}
+
+/* One project shows at a time. The others are faded out under it and out
+   of the pointer's way, their links still reachable by keyboard (tabbing to
+   one scrolls to its project). The one leaving goes quickly; the next rises
+   into its place as it goes. */
+.track[data-pin] :is(.pic, .story) {
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0s 0.2s;
+}
+
+.track[data-pin] .story {
+  transform: translateY(12px);
+}
+
+.track[data-pin] .panel[data-current] :is(.pic, .story) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 0.4s ease 0.12s,
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s;
+}
+
+.track[data-pin] + .outro .gh {
+  margin-top: 0;
+}
+
+/* ── The names ────────────────────────────────────────────────────────── */
+
+/* Each one a tab: its number and a bar that fills as the page scrolls
+   through that project, and the name under both. The one showing is
+   dark. */
+.pick {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.9em;
+  color: var(--mut);
+  text-decoration: none;
+}
+
+.pick[aria-current] {
+  color: var(--fg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pick:hover {
+    color: var(--fg);
+  }
+}
+
+.pickIdx {
+  font-size: max(13px, calc(16 * var(--s)));
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: var(--hl);
+  font-variant-numeric: tabular-nums;
+}
+
+.tick {
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--fg) 15%, transparent);
+}
+
+.tick > b {
+  display: block;
+  height: 100%;
+  background: var(--hl);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.pickName {
+  grid-column: 1 / -1;
+  margin-top: max(8px, calc(12 * var(--s)));
+  font-size: clamp(17px, 2.8cqi, 30px);
+  line-height: 1;
+  letter-spacing: -0.012em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+/* Reduced motion: the clip waits for a press. Above the picture's link. */
 .clipBtn {
   position: absolute;
+  z-index: 2;
   left: 16px;
   bottom: 16px;
   display: flex;
@@ -96,14 +373,9 @@
   border-block: 0.48em solid transparent;
 }
 
-@media (width < 48rem) {
-  .pj,
-  .pj:nth-of-type(even) {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-    margin-top: 64px;
-  }
-  .pj:nth-of-type(even) > .pim {
-    order: 0;
+@media (prefers-reduced-motion: reduce) {
+  .track[data-pin] :is(.pic, .story),
+  .track[data-pin] .panel[data-current] :is(.pic, .story) {
+    transition: none;
   }
 }

@@ -230,6 +230,59 @@ body {
   background: var(--media);
 }
 
+/* A picture that is also a link: a link laid over the whole frame, with a
+   yellow label naming where it goes. With a mouse the label fades in and the
+   picture leans in on hover; a touch screen has no hover, so the label just
+   stays. Only transform and opacity move. */
+.media-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.media-link:focus-visible {
+  outline-offset: -6px;
+}
+
+.media > :is(img, video) {
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.media-chip {
+  position: absolute;
+  right: max(12px, calc(18 * var(--s)));
+  bottom: max(12px, calc(18 * var(--s)));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  padding: 0.5em 0.95em 0.42em;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--navy);
+  font-size: max(14px, calc(17 * var(--s)));
+  font-weight: 650;
+  line-height: 1;
+  box-shadow: 0 6px 20px rgb(5 33 68 / 0.28);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .media-chip {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 0.25s ease,
+      transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .media:has(.media-link:hover) > :is(img, video) {
+    transform: scale(1.035);
+  }
+  .media-link:is(:hover, :focus-visible) .media-chip {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .arrow {
   display: inline-block;
   width: 0.72em;

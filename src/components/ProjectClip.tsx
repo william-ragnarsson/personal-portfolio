@@ -6,9 +6,9 @@ import { REDUCED_MOTION_QUERY } from "@/lib/mode";
 import s from "./sections/Projects.module.css";
 
 /**
- * A feature block's looping clip. It plays while it's on screen and pauses
- * when it isn't; nothing is fetched until it's close. With reduced motion it
- * stays on its poster until someone presses play.
+ * A project's looping clip. It plays while it's near the screen and its
+ * project is the one showing, and pauses otherwise; nothing is fetched until
+ * then. With reduced motion it stays on its poster until someone presses play.
  */
 export default function ProjectClip({ src, poster, label }: { src: string; poster: string; label: string }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -23,15 +23,28 @@ export default function ProjectClip({ src, poster, label }: { src: string; poste
       video.pause();
       return;
     }
+    // The index stacks every project in the same place, so being on screen
+    // isn't enough: its panel has to be the current one (ProjectsStage).
+    const panel = video.closest<HTMLElement>("[data-panel]");
+    let near = false;
+    const sync = () => {
+      if (near && (!panel || panel.hasAttribute("data-current"))) void video.play().catch(() => {});
+      else video.pause();
+    };
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) void video.play().catch(() => {});
-        else video.pause();
+        near = entry.isIntersecting;
+        sync();
       },
       { rootMargin: "25% 0px" },
     );
     io.observe(video);
-    return () => io.disconnect();
+    const mo = new MutationObserver(sync);
+    if (panel) mo.observe(panel, { attributes: true, attributeFilter: ["data-current"] });
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+    };
   }, [still]);
 
   return (
