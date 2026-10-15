@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>William Ragnarsson</title>
+<meta name="description" content="Hi, I’m William. I built an AI VC-analyst at Plug &amp; Play in San Francisco, I love hackathons, and I make a lot of things. Started in hardware, went all-in on software.">
+<link rel="canonical" href="https://williamragnarsson.com/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icon.png" type="image/png" sizes="256x256">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://williamragnarsson.com/">
+<meta property="og:title" content="William Ragnarsson">
+<meta property="og:description" content="AI VC-analyst at Plug &amp; Play SF, hackathon-obsessed, builder of a lot of things.">
+<meta property="og:image" content="https://williamragnarsson.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="[Used to have a pretty website with nice animations and fancy transitions, but honestly, why?] Hi, I’m William. Obsessive learner, with a big love for startups.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@wmragnarsson">
+<style>
+/*
+  Layout only. The look is the browser's own: Times, black on white, blue
+  links. This sheet centres the page, lays the hackathons out in a grid, and
+  draws the boxes with underscores and pipes, as text, at whatever width the
+  column has. No colours, fonts, borders or animation. Rules in AGENTS.md.
+*/
+
+:root {
+  --line: "________________________________________________________________________________________________________________________________________________________________________________________________________";   /* longer than any box is wide */
+  --pipes: "|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|\A|"; /* taller than any cell is high */
+}
+
+/* Screen readers skip the drawing, where the browser lets us say so. */
+@supports (content: "" / "") {
+  :root { --alt: / ""; }
+}
+
+body { max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+img { max-width: 100%; height: auto; }
+h1, h2, h3, p { text-wrap: pretty; }
+footer { margin-top: 3em; }
+
+/*
+  A box is a grid. Each child is a row (display: contents) and each
+  grandchild a cell. A cell draws its own left edge; the box draws its top
+  line and its right edge. On a row, "gap" leaves a blank line above the
+  cells and "end" closes them with a line of underscores:
+
+   __________
+  | CONTENTS |   <- the first row is "end"
+  |__________|
+  |    |     |   <- "gap"
+  | 01 | ... |
+*/
+.box, .tab, .cards { font-family: monospace; line-height: 1.2; }
+.box {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: 1lh 1ch 0 0;
+  margin: 1em 0;
+  overflow-wrap: break-word;
+}
+.box.cols { grid-template-columns: auto 1fr; }
+.box.two { grid-template-columns: 1fr 1fr; }
+.box.three { grid-template-columns: 1fr 1fr 1fr; }
+.box > * { display: contents; }
+.box > * > * { position: relative; min-width: 0; margin: 0; padding: 0 1ch 0 2ch; }
+.box > * > :only-child { grid-column: 1 / -1; }
+.gap > * { padding-top: 1lh; }
+.end > * { padding-bottom: 1lh; }
+
+.box p, .box h3 { margin: 0; }
+.box h3 { font: inherit; font-weight: bold; }
+.box :is(p, h3) + p { margin-top: 1lh; }
+.center { text-align: center; }
+.split { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 1ch; }
+
+.box::before, .box::after, .box > * > ::before, .end > ::after, .tab span::before {
+  position: absolute;
+  overflow: hidden;
+  white-space: pre;
+}
+.box::before { content: var(--line) var(--alt,); top: 0; left: 1ch; right: 1ch; height: 1lh; }
+.box::after { content: var(--pipes) var(--alt,); top: 1lh; right: 0; bottom: 0; width: 1ch; }
+.box > * > ::before { content: var(--pipes) var(--alt,); top: 0; left: 0; bottom: 0; width: 1ch; }
+.end > ::after { content: var(--line) var(--alt,); left: 1ch; right: 0; bottom: 0; height: 1lh; }
+
+/*
+  A section's tab, its line running on to the edge of the column:
+   ____________
+  | 01 TUNEBOX |_________________
+*/
+.tab { display: flex; margin: 3em 0 0; padding-top: 1lh; white-space: pre; }
+.tab::before { content: "|" var(--alt,); }
+.tab span { position: relative; padding: 0 1ch; }
+.tab span::before { content: var(--line) var(--alt,); left: 0; right: 0; bottom: 100%; height: 1lh; }
+.tab::after { content: "|" var(--line) var(--alt,); flex: 1; min-width: 0; overflow: hidden; }
+
+/* Hackathon cards: two across when the column fits them, else one. A row's
+   cards share its height, and an odd one out at the end takes the row. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 38ch), 1fr));
+  column-gap: 2ch;
+}
+.cards > .box { grid-template-rows: auto 1fr; }
+.cards > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+.cards .box > :last-child > * { display: flex; flex-direction: column; }
+.cards .box p:last-child { margin-top: auto; padding-top: 1lh; }
+</style>
+</head>
+<body>
+
+<p><i>[Used to have a pretty website with nice animations and fancy transitions, but honestly, why?]</i></p>
+
+<h1>Hi, I’m William.</h1>
+
+<p>Obsessive learner, with a big love for startups.</p>
+
+<nav class="box cols" aria-label="Contents">
+  <div class="end"><span>CONTENTS</span></div>
+  <div class="gap"><span>01</span><span><a href="#tunebox">Tunebox</a></span></div>
+  <div><span>02</span><span><a href="#plug-and-play">Plug and Play</a></span></div>
+  <div><span>03</span><span><a href="#hackathons">Hackathons</a></span></div>
+  <div><span>04</span><span><a href="#projects">Other projects</a></span></div>
+  <div><span>05</span><span><a href="#nyc">The move to NYC</a></span></div>
+  <div class="end"><span>06</span><span><a href="#contact">Let's talk</a></span></div>
+</nav>
+
+<section id="tunebox">
+
+<p class="tab"><span>01 TUNEBOX</span></p>
+
+<h2>My first startup in my first year of university.</h2>
+
+<p><b>Tunebox</b>, a hardware startup: a more creative, hands-on project than anything I’d done before, and the thing that first lit the <b>drive to build startups</b>.</p>
+
+<p>We entered the startup competition Start Academy and placed <b>2nd out of 120 startups</b>.</p>
+
+<div class="box two">
+  <div class="gap end"><span>Start Academy<br>2nd of 120</span><span>VLAJO NextGen Fest<br>Finalist</span></div>
+</div>
+
+<p><img src="/images/tunebox/stage.webp" width="1200" height="800" alt="Pitching Tunebox on stage at VLAJO NextGen Fest ’24, with the box itself on the slide behind us"><br>
+<small>Pitch day at VLAJO NextGen Fest - finalist</small></p>
+
+<p>I’ve since moved on from the hardware, (luckily) but not the itch. Ever since, my focus has been <b>100% startups</b>.</p>
+
+<p><a href="https://www.youtube.com/watch?v=JGS_X_n-Gvs">Watch the Tunebox trailer</a></p>
+
+</section>
+
+<section id="plug-and-play">
+
+<p class="tab"><span>02 PLUG AND PLAY</span></p>
+
+<h2>Trained an AI VC analyst on a proprietary dataset of 900+ pitch decks</h2>
+
+<p>During my time at Plug and Play I ran first-pass review on <b>900+ pitch decks</b>, I reviewed each one and kept these verdicts in a structured spreadsheet. This process was very repetitive, and as I looked at my growing dataset I thought: <b>I can self-train an AI model on this data.</b></p>
+
+<p>The result is an end-to-end VC analyst pipeline that <b>cut down my review-time by 40%</b>.</p>
+
+<div class="box cols">
+  <div class="end"><span>THE PIPELINE</span></div>
+  <div class="gap"><span>1</span><span>Deck ingestion</span></div>
+  <div><span>2</span><span>Structured extraction</span></div>
+  <div><span>3</span><span>Logistic-regression classifier, trained on the 900+ labeled evaluations</span></div>
+  <div><span>4</span><span>Automated due diligence</span></div>
+  <div class="end"><span>5</span><span>Drafted investment memo</span></div>
+  <div class="gap end"><span>Review time: -40%</span></div>
+</div>
+
+<p><img src="/images/vc-analyst.webp" width="1400" height="875" alt="The VC analyst’s home page: “Have your deck reviewed by a VC. Before you pitch.”, a drop zone for a pitch deck, and a due-diligence table scoring a sample company"></p>
+
+<p><a href="https://vcanalyst.williamragnarsson.dev">Try it out yourself</a> or read the <a href="https://github.com/william-ragnarsson/vc-analyst">source</a>.</p>
+
+<p>The classifier is still in progress: I’m benchmarking methods and documenting the work for a paper.</p>
+
+</section>
+
+<section id="hackathons">
+
+<p class="tab"><span>03 HACKATHONS</span></p>
+
+<h2>Love hackathons, 3 awards!!!</h2>
+
+<p>Don’t care where, just with whom :)</p>
+
+<div class="cards">
+
+<article class="box">
+  <div class="end"><div>NEW YORK, USA<br>vibeFORWARD</div></div>
+  <div class="gap end"><div>
+    <h3>Placeholder.AI</h3>
+    <p>MCP layer that swaps personal data for placeholders and asks for your approval before anything reaches the AI</p>
+    <p><a href="https://github.com/william-ragnarsson/Placeholder">Code on GitHub</a></p>
+  </div></div>
+</article>
+
+<article class="box">
+  <div class="end"><div><span class="split"><span>BERLIN, GERMANY</span> <span>[3rd place]</span></span>BCG Platinion Hackathon</div></div>
+  <div class="gap end"><div>
+    <h3>ZUCC.IT</h3>
+    <p>AI analyst that follows your meetings to improve your interviewing soft skills</p>
+    <p><a href="https://github.com/william-ragnarsson/Team-zucc">Code on GitHub</a></p>
+  </div></div>
+</article>
+
+<article class="box">
+  <div class="end"><div>STOCKHOLM, SWEDEN<br>HackEurope</div></div>
+  <div class="gap end"><div>
+    <h3>Project Net Zero</h3>
+    <p>AI agent that helps developers refactor legacy code to greener and more energy efficient code</p>
+    <p><a href="https://github.com/william-ragnarsson/project-net-zero-backend">Code on GitHub</a></p>
+  </div></div>
+</article>
+
+<article class="box">
+  <div class="end"><div><span class="split"><span>BELGIUM</span> <span>[Best Pitch Award]</span></span>Data for Good Challenge (D4GC)</div></div>
+  <div class="gap end"><div>
+    <h3>Nora.ai</h3>
+    <p>AI that serves as a surgical co-pilot for student training</p>
+    <p><a href="https://github.com/william-ragnarsson/DataForGoodChallenge">Code on GitHub</a></p>
+  </div></div>
+</article>
+
+<article class="box">
+  <div class="end"><div><span class="split"><span>BELGIUM</span> <span>[2nd place]</span></span>Start Academy</div></div>
+  <div class="gap end"><div>
+    <h3>Tunebox</h3>
+    <p>A startup competition, where I presented Tunebox, a hardware startup from my first year of university.</p>
+    <p><a href="https://www.youtube.com/watch?v=JGS_X_n-Gvs">Watch the trailer</a></p>
+  </div></div>
+</article>
+
+</div>
+
+</section>
+
+<section id="projects">
+
+<p class="tab"><span>04 OTHER PROJECTS</span></p>
+
+<h2>Some of my other projects :)</h2>
+
+<p>Simulators, algorithms, half-finished projects, most of it can be found on my <a href="https://github.com/william-ragnarsson">GitHub</a>!</p>
+
+<h3>Jev Events</h3>
+
+<p><i>Turn any inbox, calendar or chat into typed, semantic events.</i></p>
+
+<p><img src="/images/projects/jev-events.webp" width="1200" height="750" alt="The Jev Events landing page: Jev asks whether each email needs a reply today and lifts the ones that do onto a ‘Reply today’ label"></p>
+
+<p>An open-source TypeScript library built on TypeSafe’s Jev. You ask a question in plain English, like <b>“does this email need a reply today?”</b>, and Jev answers it for every new email, invite or message your users connect. Your code runs on the answer.</p>
+
+<p>The events are typed from your own questions, so a typo is a compile error, and every action starts in dry-run. It works with Gmail, Google Calendar, Slack and Twitch today, and you can <b>try it on a live Twitch chat</b> in your browser.</p>
+
+<dl class="box cols">
+  <div class="end"><dt>STACK</dt><dd>TypeScript, Jev, OAuth, Next.js</dd></div>
+  <div class="end"><dt>LINKS</dt><dd><a href="https://jev-events.williamragnarsson.dev">Live demo</a>, <a href="https://github.com/william-ragnarsson/jev-events">Source</a></dd></div>
+</dl>
+
+<h3>Double Pendulum</h3>
+
+<p><i>Runge-Kutta implementation using WebGPU shaders.</i></p>
+
+<p><img src="/images/projects/double-pendulum.webp" width="960" height="960" alt="The double pendulum phase map: every pixel is a pendulum with a slightly different start, and the smooth rainbow bands break into chaos as the simulation runs"></p>
+
+<p>After watching a video on double pendulums, I became obsessed with the visual output and wanted to try it out myself. I couldn’t find a website that had implemented a realtime simulation so I built one. Since the launch, the website has received over <b>1000+ unique visitors</b>.</p>
+
+<dl class="box cols">
+  <div class="end"><dt>STACK</dt><dd>WebGPU, Compute shaders, TypeScript, Next.js</dd></div>
+  <div class="end"><dt>LINKS</dt><dd><a href="https://www.pendulum.williamragnarsson.com">Live demo</a>, <a href="https://github.com/william-ragnarsson/double-pendulum">Source</a></dd></div>
+</dl>
+
+<h3>Project Net Zero</h3>
+
+<p><i>AI agent that refactors legacy code to be greener and more energy efficient.</i></p>
+
+<p><img src="/images/projects/project-net-zero.webp" width="1200" height="705" alt="Project Net Zero’s pipeline: code is split per function, optimized, measured for carbon, and only swapped back in if it is greener and still passes tests. Under it, four cards: end-to-end automation, correctness guaranteed, energy as the signal, zero workflow change"></p>
+
+<p>Built at <b>HackEurope in Stockholm</b>, a trip a few friends and I flew out for together.</p>
+
+<p>The pipeline splits a codebase function by function, rewrites each one for energy efficiency, measures the carbon cost of the old and new versions, and swaps the new one in only if it is both greener and still passing the tests.</p>
+
+<dl class="box cols">
+  <div class="end"><dt>STACK</dt><dd>Python, LLM agents, Static analysis, FastAPI</dd></div>
+  <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/project-net-zero-backend">Source</a></dd></div>
+</dl>
+
+<p><a href="https://github.com/william-ragnarsson">See the rest on GitHub</a></p>
+
+</section>
+
+<section id="nyc">
+
+<p class="tab"><span>05 NYC</span></p>
+
+<h2>The move to NYC</h2>
+
+<p><b>I’m moving to New York City to go all in on startups.</b> I just finished my Bachelor’s in Computer Science, and I have decided I want to continue my learning in a different way.</p>
+
+<p>From the moment I learned what a startup even was, I haven’t been able to look away. There’s a <b>switch in my brain I can’t turn off</b>, that gets me excited when I find a new idea I can work on, or build something that someone mentions has been annoying them.</p>
+
+<p><b>So why move to NYC?</b> The startup scene in Belgium is growing, but it just doesn’t compare to what’s available here. People here work harder, move faster, and have a completely different mindset: one I resonate with much more. I wanted to learn from more experienced people here, so that’s what I’m doing.</p>
+
+<p>I want to join a <b>growing team with a LOT of ambition</b>. Almost everything I know, I learned by building. So that’s what I want to keep doing: <b>build a lot, build fast, and build big.</b></p>
+
+</section>
+
+<section id="contact">
+
+<p class="tab"><span>06 CONTACT</span></p>
+
+<h2>Let’s Talk!</h2>
+
+<p>Send me an email, or find me on LinkedIn and X.</p>
+
+<div class="box three center">
+  <div class="gap end"><span><a href="mailto:william.ragnarsson@gmail.com">william.ragnarsson@gmail.com</a></span></div>
+  <div class="gap end"><span><a href="https://www.linkedin.com/in/william-ragnarsson">LinkedIn</a></span><span><a href="https://x.com/wmragnarsson">X</a></span><span><a href="https://github.com/william-ragnarsson">GitHub</a></span></div>
+</div>
+
+</section>
+
+<footer>
+<p><small>© 2026 William Ragnarsson. Plain HTML, with a little CSS for the layout. <a href="https://github.com/william-ragnarsson/personal-portfolio">Source</a>. <a href="#top">Back to top</a>.</small></p>
+</footer>
+
+</body>
+</html>
