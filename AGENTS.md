@@ -1,123 +1,104 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# Looks like plain HTML, on purpose
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+The whole site is `public/index.html`. It used to be a Next.js app with a WebGL
+globe and scroll-driven stages. William replaced it with a page that looks like
+raw HTML. Keep it that way:
 
-# The responsive contract
+- **The look is the browser's.** Times, black on white, links in the default
+  blue, default headings. No colours, backgrounds, font choices, borders,
+  shadows, rounded corners, hover effects, transitions or animation.
+- **CSS is for layout only.** One `<style>` in the head centres the column,
+  lays things out in grids, spaces them, and draws the boxes. No `style=""`,
+  no stylesheet file, no presentational attributes (`align`, `bgcolor`,
+  `<center>`, `<font>`).
+- **No JavaScript.** No `<script>`, no analytics, no embeds. The trailer is a
+  link to YouTube, and the contact is a `mailto:` link.
+- **Structure is ASCII.** Underscores for horizontal lines, `|` for vertical
+  ones. Nothing fancier: no CSS borders, no box-drawing characters, no
+  arrows, no emoji.
+- **No build.** Nothing generates the page. Edit the HTML.
 
-This site is one long scroll-driven page. Nearly every layout bug it has had came
-from breaking one of the rules below. After touching anything here, walk the
-viewport matrix in the README — none of these fail a typecheck.
+## Boxes
 
-### One breakpoint, defined once
+The boxes are drawn by CSS, as text, so they stretch to the column and their
+text wraps inside them. A box is a grid. Each child is a row, and each
+grandchild a cell:
 
-`src/lib/breakpoints.ts` is the only place a breakpoint lives: Tailwind's `md`,
-written `(width >= 48rem)` in CSS and in JS alike. If JS needs to know the
-breakpoint, import `isWideViewport()` from there — never write a second
-`matchMedia` string for it, and never compare `window.innerWidth` to a number
-(scrollbars and the browser's default font size both make that disagree with
-CSS).
+```html
+<div class="box cols">
+  <div class="end"><span>THE PIPELINE</span></div>
+  <div class="gap"><span>1</span><span>First step</span></div>
+  <div class="end"><span>2</span><span>Last step</span></div>
+</div>
+```
 
-The globe stages have one more condition shared between CSS and JS: a portrait
-stage (height ≥ width) puts the globe under the text column instead of beside
-it. `Stage.module.css` switches the column with `@container (orientation:
-portrait)` and `placeGlobe()` in `src/components/globe/stage.ts` tests
-`H >= W`. Likewise, `--u` in the CSS and `u` in `measureStage()` are the same
-formula. Change either side, change both.
+```
+ ________________
+| THE PIPELINE   |
+|________________|
+|   |            |
+| 1 | First step |
+| 2 | Last step  |
+|___|____________|
+```
 
-### A breakpoint changes CSS, never the tree
+- **Columns:** one by default; `cols` is a narrow label column and the rest
+  (`auto 1fr`); `two` and `three` are equal columns. A row with a single cell
+  spans every column.
+- **Rows:** `gap` leaves a blank line above the row; `end` closes it with a
+  line of underscores. A row can be both.
+- **Drawing:** every cell draws its left `|` column, and the box draws its top
+  line and right `|` column. They are the `--line` (200 underscores) and
+  `--pipes` (100 pipes) strings, clipped to fit. If a box ever gets wider than
+  200 characters or a cell taller than 100 lines, lengthen them.
+- **Screen readers** skip the drawing: `var(--alt,)` gives each one empty alt
+  text where the browser supports it.
 
-Crossing `md` must not mount or unmount anything. The hackathons and NYC
-sections render **both** versions for everyone: the scroll-driven stage and the
-still list with its globe. CSS shows one of them from `<html data-globe>` plus
-the breakpoint. `data-globe` is set by an inline script before first paint
-(`src/lib/mode.ts`), and when WebGL2 fails later, `demoteGlobe()` flips it to
-`none`: again a CSS-only change.
+### Every cell is a whole number of lines
 
-Rendering two different trees behind a JS boolean is a bug this page has
-shipped: the boolean started `false` on the server, so the section remounted at
-hydration and again on every drag across 768px, throwing away its scroll
-measurements mid-scroll. If you need the viewport in JS for *geometry*, read it
-inside the measurement pass (`stagesActive()`), not during render.
+The pipes are lines of text. A cell half a line taller than its text cuts its
+last `|` in half, and the underscores under it no longer meet the pipes. So
+inside a box:
 
-### Scroll-linked sections size their track in the same unit as their travel
+- Boxes use `line-height: 1.2`, and every vertical space is in `lh`: `gap`,
+  `end`, and the `1lh` between paragraphs. No `em` or `px` margins.
+- Headings inherit the box's font (`.box h3 { font: inherit }`), so they are
+  one line tall.
+- No pictures in boxes.
 
-A sticky section's scroll track and the distance its content moves must be in the
-same unit, or they only agree at one viewport size.
+### Tabs and cards
 
-Both globe stages work in **screens**. The track is
-`calc(100dvh * (1 + var(--travel)))`, and `src/lib/globe/timeline.ts` turns `p`,
-the screens scrolled since the track reached the top, into a frame (camera,
-card, pins, progress), as pure functions. So the same `p` is the same frame at
-every window size, and the card for a stop shows at the same point of the scroll
-however tall the window is. Keep timelines pure: anything that depends on the
-window belongs in the measurement pass, not in `p`. The projects index is the
-same, with `src/lib/projectSteps.ts` as its timeline.
+A section starts with a tab whose line runs on to the edge of the column:
 
-### `dvh`, not `vh`
+```html
+<p class="tab"><span>01 TUNEBOX</span></p>
+```
 
-Mobile browsers change `vh` when the URL bar collapses. On a scroll-linked page
-that silently resizes the track mid-scroll and invalidates every measurement
-taken from it. Use `dvh` anywhere a height is load-bearing.
+The hackathons are `<article class="box">` cards in a `<div class="cards">`:
+two across when the column fits two 38-character cards (a window of about
+680px), else one. Cards in a row share its height, the links sit at the
+bottom, and an odd last card takes the whole row.
 
-### A sticky container must fit the viewport
+## Pictures
 
-If a `sticky` element is taller than the viewport it stops sticking and its
-contents run into the next section. The stages are `height: 100dvh` with
-`overflow: hidden`, and a `grid-template-rows: minmax(0, 1fr) auto` gives the
-progress bar its row first, so no combination of content can push past the
-bottom. The globe is placed in whatever room the text leaves, and shrinks to
-fit it.
+`img { max-width: 100%; height: auto }` fits them to the column. Every `<img>`
+also has `width` and `height` set to its file's real size, so the page saves
+its space before it loads. Keep images WebP and no wider than 1400px
+(`cwebp -q 80 -resize 1200 0`).
 
-The projects index can't shrink its text, so it checks instead:
-`ProjectsStage` lays itself out pinned at `100svh`, the smallest the window
-gets, and pins only if everything ends inside. Otherwise it stays a list.
-Until it has measured, its track keeps the height it has pinned: a reload
-restores the scroll position before any script runs, and if pinning then
-changed the page's height, the browser's scroll anchoring would carry the
-reader past the section.
+## Check it
 
-### Measure once per frame, in one pass
+Serve `public/` (see README) and look at 320, 375, 736, 1024 and 1440px, and
+sweep 600 to 767px, where the cards switch from one column to two:
 
-Use `useResizeEffect` (`src/hooks/`), not `window.addEventListener("resize")`. It
-coalesces into a single rAF and also catches reflows a resize listener misses
-(font swap, image load). Do all DOM reads and commit **one** state update: two
-effects where the second depends on the first's state costs two layout passes and
-paints a visibly wrong intermediate frame.
+- `document.documentElement.scrollWidth` equals the window width: no
+  sideways scroll.
+- Every cell is a whole number of lines. This should return an empty list:
 
-Scroll goes through `subscribeFrame()` (`src/lib/frame.ts`): one listener and
-one rAF for the whole page. Subscribers get `scrollY` and the viewport height
-and must not read layout. They draw from the geometry their `useResizeEffect`
-pass measured.
-
-Prefer deriving values arithmetically over re-reading the DOM after a write —
-the stages project pins and route ends from the camera they just computed
-rather than measuring anything they moved.
-
-### Animate only `transform` and `opacity`
-
-Anything else repaints every scroll frame. Two traps specific to this page:
-interpolating a `box-shadow` string (use a static shadow on an overlay and fade
-its opacity), and animating SVG geometry attributes like `r` or `y1` (scale with
-a transform instead — geometry attributes re-run SVG layout).
-
-The exceptions are deliberate, and each is bounded:
-
-- **The globe canvases** repaint every frame. That's their job. There is one
-  WebGL2 context for the whole page (`src/lib/globe/renderer.ts`), and each
-  stage copies from it into its own 2D canvas. Don't create another context.
-- **`font-variation-settings`** on the hero's letters (the opening, and the
-  hover under a mouse) and on the stretching city names. It re-lays out text,
-  so the hero's heading has `contain: layout style`, and a city name only
-  animates once, when it scrolls in.
-- **`mask-image`** on the hackathons text while the blue folds into the globe.
-  It's set only while the iris is moving, and cleared once it's gone.
-
-### Reveal-on-scroll can be skipped
-
-An `IntersectionObserver` reports threshold *crossings*. Go from below the
-viewport to above it between two samples — a fast flick, an anchor jump, a reload
-that restores scroll position — and no callback ever fires, leaving the element
-invisible forever. `useInView` handles this with a `scrollend` sweep; keep it if
-you touch that code.
+  ```js
+  [...document.querySelectorAll('.box > * > *')].filter(c => {
+    const h = c.getBoundingClientRect().height;
+    const n = h / parseFloat(getComputedStyle(c).lineHeight);
+    return Math.abs(n - Math.round(n)) > 0.01;
+  });
+  ```
