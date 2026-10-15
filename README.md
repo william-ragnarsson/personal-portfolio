@@ -11,8 +11,8 @@ pipes.
 public/
   index.html             the whole site
   images/                one picture per section, WebP, at most 1400px wide
-  favicon.svg, icon.png  the globe favicon
-  apple-touch-icon.png
+  favicon.svg, icon.png  the tab icon: a bold Times W in one of the page's boxes
+  apple-touch-icon.png   the same, with room around it for the home screen
   og.png                 link preview, 1200x630
 vercel.json              tells Vercel there is nothing to build: serve public/
 ```
