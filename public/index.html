@@ -42,6 +42,11 @@ img { max-width: 100%; height: auto; }
 h1, h2, h3, p { text-wrap: pretty; }
 footer { margin-top: 3em; }
 
+/* A picture is a link to what it shows, with that link again, centred,
+   under it. */
+figure { margin: 1em 0; }
+figcaption { text-align: center; overflow-wrap: break-word; }
+
 /*
   A box is a grid. Each child is a row (display: contents) and each
   grandchild a cell. A cell draws its own left edge; the box draws its top
@@ -110,6 +115,23 @@ footer { margin-top: 3em; }
 .cards > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 .cards .box > :last-child > * { display: flex; flex-direction: column; }
 .cards .box p:last-child { margin-top: auto; padding-top: 1lh; }
+
+/*
+  A project: title and tagline, picture, write-up, stack box. Once the column
+  is at its full 40rem (a window of 42rem, 672px), the picture sits in the
+  write-up on the left, half the column wide, like an <img align="left">, and
+  the stack box closes the project at full width under both, its STACK and
+  LINKS rows side by side as one row of four cells.
+*/
+.project { display: flow-root; margin: 2.5em 0; }
+.project h3 { margin-bottom: 0; }
+.project header p { margin: 0; }
+@media (min-width: 42rem) {
+  .project header { margin-bottom: 1em; }
+  .project figure { float: left; width: calc(50% - 1rem); margin: 0 2rem 1em 0; }
+  .project .text > :first-child { margin-top: 0; }
+  .project > .box { clear: both; margin-bottom: 0; grid-template-columns: auto 1fr auto auto; }
+}
 </style>
 </head>
 <body>
@@ -124,7 +146,7 @@ footer { margin-top: 3em; }
   <div class="end"><span><span class="split"><span>QUICKSTART</span> <span>[tl;dr]</span></span></span></div>
   <div class="gap"><span>ME</span><span>Looking to join a seed to Series&nbsp;B startup</span></div>
   <div class="gap"><span>LANGUAGES</span><span>TypeScript, Python, Rust, C</span></div>
-  <div><span>FRAMEWORKS</span><span>FastAPI, scikit-learn, ONNX, LLM agents, MCP</span></div>
+  <div><span>FRAMEWORKS</span><span>FastAPI, scikit-learn, <abbr title="Open Neural Network Exchange, a format that runs a trained model anywhere">ONNX</abbr>, LLM agents, <abbr title="Model Context Protocol, how AI assistants connect to tools and data">MCP</abbr></span></div>
   <div><span>WEB</span><span>Next.js, React, PostgreSQL, OAuth, WebGPU</span></div>
   <div class="gap end"><span>SPECIALTY</span><span>Forward deployed, user-oriented: I build on feedback and implement features that people will use</span></div>
 </div>
@@ -143,8 +165,10 @@ footer { margin-top: 3em; }
   <div class="gap end"><span>Start Academy<br>2nd of 120</span><span>VLAJO NextGen Fest<br>Finalist</span></div>
 </div>
 
-<p><img src="/images/tunebox/stage.webp" width="1200" height="800" alt="Pitching Tunebox on stage at VLAJO NextGen Fest ’24, with the box itself on the slide behind us"><br>
-<a href="https://www.youtube.com/watch?v=JGS_X_n-Gvs">Watch the Tunebox trailer</a></p>
+<figure>
+  <a href="https://www.youtube.com/watch?v=JGS_X_n-Gvs"><img src="/images/tunebox/stage.webp" width="1200" height="800" alt="Pitching Tunebox on stage at VLAJO NextGen Fest ’24, with the box itself on the slide behind us"></a>
+  <figcaption><a href="https://www.youtube.com/watch?v=JGS_X_n-Gvs">Watch the Tunebox trailer</a></figcaption>
+</figure>
 
 <p>We were unsuccessful in finding product-market fit and decided on discontinuing the project, but it confirmed my ambitions to <b>pursue startups 100%</b>.</p>
 
@@ -163,14 +187,16 @@ footer { margin-top: 3em; }
 <div class="box cols">
   <div class="end"><span>THE MODEL</span></div>
   <div class="gap"><span>83%</span><span>Same invest-or-pass call as me, on meetings it never saw</span></div>
-  <div><span>85%</span><span>Picks the deck I backed over one I passed (ROC AUC 0.85, against 0.75 for adding up the star ratings)</span></div>
+  <div><span>85%</span><span>Picks the deck I backed over one I passed (<abbr title="The chance it ranks a deck I backed above one I passed: 0.5 is a coin flip, 1 is perfect">ROC AUC</abbr> 0.85, against 0.75 for adding up the star ratings)</span></div>
   <div class="end"><span>-40%</span><span>Time I spent reviewing decks</span></div>
 </div>
 
-<p>It’s a gradient-boosted model, tested with grouped, nested cross-validation so no meeting leaks into its own test, and exported to ONNX so it runs inside the app.</p>
+<p>It’s a gradient-boosted model, tested with grouped, nested cross-validation so no meeting leaks into its own test, and exported to <abbr title="Open Neural Network Exchange, a format that runs a trained model anywhere">ONNX</abbr> so it runs inside the app.</p>
 
-<p><img src="/images/vc-analyst.webp" width="1400" height="875" alt="The VC analyst’s home page: “Have your deck reviewed by a VC. Before you pitch.”, a drop zone for a pitch deck, and a due-diligence table scoring a sample company"><br>
-<a href="https://sevenfold.williamragnarsson.dev">https://sevenfold.williamragnarsson.dev</a></p>
+<figure>
+  <a href="https://sevenfold.williamragnarsson.dev"><img src="/images/vc-analyst.webp" width="1400" height="875" loading="lazy" alt="The VC analyst’s home page: “Have your deck reviewed by a VC. Before you pitch.”, a drop zone for a pitch deck, and a due-diligence table scoring a sample company"></a>
+  <figcaption><a href="https://sevenfold.williamragnarsson.dev">https://<wbr>sevenfold.williamragnarsson.dev</a></figcaption>
+</figure>
 
 <p>Read <a href="https://sevenfold.williamragnarsson.dev/model">how the model was trained and tested</a>, or the <a href="https://github.com/william-ragnarsson/sevenfold">source</a>.</p>
 
@@ -190,7 +216,7 @@ footer { margin-top: 3em; }
   <div class="end"><div>NEW YORK, USA<br>vibeFORWARD</div></div>
   <div class="gap end"><div>
     <h3>Placeholder.AI</h3>
-    <p>MCP layer that swaps personal data for placeholders and asks for your approval before anything reaches the AI</p>
+    <p><abbr title="Model Context Protocol, how AI assistants connect to tools and data">MCP</abbr> layer that swaps personal data for placeholders and asks for your approval before anything reaches the AI</p>
     <p><a href="https://github.com/william-ragnarsson/Placeholder">Code on GitHub</a></p>
   </div></div>
 </article>
@@ -243,51 +269,61 @@ footer { margin-top: 3em; }
 
 <p>Simulators, algorithms, half-finished projects, most of it can be found on my <a href="https://github.com/william-ragnarsson">GitHub</a>!</p>
 
-<h3>NetZero</h3>
+<article class="project" id="netzero">
+  <header>
+    <h3>NetZero</h3>
+    <p><i>Makes your Python use less energy.</i></p>
+  </header>
+  <figure>
+    <a href="https://netzero.williamragnarsson.dev"><img src="/images/projects/netzero.webp" width="1200" height="750" loading="lazy" alt="The NetZero landing page: “Make your Python use less energy.”, with a replay below it where one function gets three rewrites and the kept one cuts CO2e per call by 78.6%"></a>
+    <figcaption><a href="https://netzero.williamragnarsson.dev">https://<wbr>netzero.williamragnarsson.dev</a></figcaption>
+  </figure>
+  <div class="text">
+    <p>NetZero takes a Python repository, finds the functions that do the most work, and rewrites them to use less energy. It started at <b>HackEurope in Stockholm</b>, a trip a few friends and I flew out for together.</p>
+    <p>Each function gets tests first, then three rewrites. A rewrite is only kept if it passes the tests, gives the same answers as the original on recorded calls, and <b>measurably cuts the energy</b> of every call.</p>
+  </div>
+  <dl class="box cols">
+    <div class="end"><dt>STACK</dt><dd>Python, FastAPI, Claude API, CodeCarbon</dd></div>
+    <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/project-net-zero-backend">Source</a></dd></div>
+  </dl>
+</article>
 
-<p><i>Makes your Python use less energy.</i></p>
+<article class="project" id="jev-events">
+  <header>
+    <h3>Jev Events</h3>
+    <p><i>Turn any inbox, calendar or chat into typed, semantic events.</i></p>
+  </header>
+  <figure>
+    <a href="https://jev-events.williamragnarsson.dev"><img src="/images/projects/jev-events.webp" width="1200" height="750" loading="lazy" alt="The Jev Events landing page: Jev asks whether each email needs a reply today and lifts the ones that do onto a ‘Reply today’ label"></a>
+    <figcaption><a href="https://jev-events.williamragnarsson.dev">https://<wbr>jev-events.williamragnarsson.dev</a></figcaption>
+  </figure>
+  <div class="text">
+    <p>An open-source TypeScript library built on TypeSafe’s Jev. You ask a question in plain English, like <b>“does this email need a reply today?”</b>, and Jev answers it for every new email, invite or message your users connect. Your code runs on the answer.</p>
+    <p>The events are typed from your own questions, so a typo is a compile error, and every action starts in dry-run. It works with Gmail, Google Calendar, Slack and Twitch today, and you can <b>try it on a live Twitch chat</b> in your browser.</p>
+  </div>
+  <dl class="box cols">
+    <div class="end"><dt>STACK</dt><dd>TypeScript, Jev, OAuth, Next.js</dd></div>
+    <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/jev-events">Source</a></dd></div>
+  </dl>
+</article>
 
-<p><img src="/images/projects/netzero.webp" width="1200" height="750" alt="The NetZero landing page: “Make your Python use less energy.”, with a replay below it where one function gets three rewrites and the kept one cuts CO2e per call by 78.6%"><br>
-<a href="https://netzero.williamragnarsson.dev">https://netzero.williamragnarsson.dev</a></p>
-
-<p>NetZero takes a Python repository, finds the functions that do the most work, and rewrites them to use less energy. It started at <b>HackEurope in Stockholm</b>, a trip a few friends and I flew out for together.</p>
-
-<p>Each function gets tests first, then three rewrites. A rewrite is only kept if it passes the tests, gives the same answers as the original on recorded calls, and <b>measurably cuts the energy</b> of every call.</p>
-
-<dl class="box cols">
-  <div class="end"><dt>STACK</dt><dd>Python, FastAPI, Claude API, CodeCarbon</dd></div>
-  <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/project-net-zero-backend">Source</a></dd></div>
-</dl>
-
-<h3>Jev Events</h3>
-
-<p><i>Turn any inbox, calendar or chat into typed, semantic events.</i></p>
-
-<p><img src="/images/projects/jev-events.webp" width="1200" height="750" alt="The Jev Events landing page: Jev asks whether each email needs a reply today and lifts the ones that do onto a ‘Reply today’ label"><br>
-<a href="https://jev-events.williamragnarsson.dev">https://jev-events.williamragnarsson.dev</a></p>
-
-<p>An open-source TypeScript library built on TypeSafe’s Jev. You ask a question in plain English, like <b>“does this email need a reply today?”</b>, and Jev answers it for every new email, invite or message your users connect. Your code runs on the answer.</p>
-
-<p>The events are typed from your own questions, so a typo is a compile error, and every action starts in dry-run. It works with Gmail, Google Calendar, Slack and Twitch today, and you can <b>try it on a live Twitch chat</b> in your browser.</p>
-
-<dl class="box cols">
-  <div class="end"><dt>STACK</dt><dd>TypeScript, Jev, OAuth, Next.js</dd></div>
-  <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/jev-events">Source</a></dd></div>
-</dl>
-
-<h3>Chaos Theory</h3>
-
-<p><i>Runge-Kutta implementation using WebGPU shaders.</i></p>
-
-<p><img src="/images/projects/double-pendulum.webp" width="960" height="960" alt="The double pendulum phase map: every pixel is a pendulum with a slightly different start, and the smooth rainbow bands break into chaos as the simulation runs"><br>
-<a href="https://www.pendulum.williamragnarsson.com">https://www.pendulum.williamragnarsson.com</a></p>
-
-<p>After watching a video on double pendulums, I became obsessed with the visual output and wanted to try it out myself. I couldn’t find a website that had implemented a realtime simulation so I built one. Since the launch, the website has received over <b>1000+ unique visitors</b>.</p>
-
-<dl class="box cols">
-  <div class="end"><dt>STACK</dt><dd>WebGPU, Compute shaders, TypeScript, Next.js</dd></div>
-  <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/double-pendulum">Source</a></dd></div>
-</dl>
+<article class="project" id="chaos-theory">
+  <header>
+    <h3>Chaos Theory</h3>
+    <p><i>Runge-Kutta implementation using WebGPU shaders.</i></p>
+  </header>
+  <figure>
+    <a href="https://www.pendulum.williamragnarsson.com"><img src="/images/projects/double-pendulum.webp" width="960" height="960" loading="lazy" alt="The double pendulum phase map: every pixel is a pendulum with a slightly different start, and the smooth rainbow bands break into chaos as the simulation runs"></a>
+    <figcaption><a href="https://www.pendulum.williamragnarsson.com">https://<wbr>www.pendulum.williamragnarsson.com</a></figcaption>
+  </figure>
+  <div class="text">
+    <p>After watching a video on double pendulums, I became obsessed with the visual output and wanted to try it out myself. I couldn’t find a website that had implemented a realtime simulation so I built one. Since the launch, the website has received over <b>1000+ unique visitors</b>.</p>
+  </div>
+  <dl class="box cols">
+    <div class="end"><dt>STACK</dt><dd>WebGPU, Compute shaders, TypeScript, Next.js</dd></div>
+    <div class="end"><dt>LINKS</dt><dd><a href="https://github.com/william-ragnarsson/double-pendulum">Source</a></dd></div>
+  </dl>
+</article>
 
 <p><a href="https://github.com/william-ragnarsson">See the rest on GitHub</a></p>
 
