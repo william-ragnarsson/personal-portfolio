@@ -79,17 +79,55 @@ two across when the column fits two 38-character cards (a window of about
 680px), else one. Cards in a row share its height, the links sit at the
 bottom, and an odd last card takes the whole row.
 
+### Projects
+
+Each of the other projects is an `<article class="project">` of four parts, in
+this order: a `<header>` (title and tagline), the `<figure>`, the write-up
+(`.text`) and the STACK / LINKS box.
+
+```html
+<article class="project" id="netzero">
+  <header><h3>NetZero</h3><p><i>Tagline.</i></p></header>
+  <figure>...</figure>
+  <div class="text"><p>...</p></div>
+  <dl class="box cols">...</dl>
+</article>
+```
+
+Narrower than 42rem (672px), it is one column in that order. From 42rem, where
+the column is at its full 40rem, the picture floats left at half the column,
+like an `<img align="left">`. Its top lines up with the write-up's first line,
+and the write-up runs beside it and on under it. The box clears the float and
+closes the project at full width, so both sides end on the same line. Its
+STACK and LINKS rows sit side by side there, as one row of four cells
+(`auto 1fr auto auto`); narrower, they are two rows again.
+
 ## Pictures
+
+A picture is a `<figure>`: the `<img>` inside a link to what it shows, and the
+same link again, centred, as the `<figcaption>`. A caption that is a URL gets a
+`<wbr>` after `https://`, so on a narrow phone it breaks there.
+
+```html
+<figure>
+  <a href="https://netzero.williamragnarsson.dev"><img ...></a>
+  <figcaption><a href="https://netzero.williamragnarsson.dev">https://<wbr>netzero.williamragnarsson.dev</a></figcaption>
+</figure>
+```
 
 `img { max-width: 100%; height: auto }` fits them to the column. Every `<img>`
 also has `width` and `height` set to its file's real size, so the page saves
-its space before it loads. Keep images WebP and no wider than 1400px
+its space before it loads, and `loading="lazy"` unless it is in the first
+screen. Keep images WebP and no wider than 1400px
 (`cwebp -q 80 -resize 1200 0`).
+
+Jargon gets an `<abbr title="...">`, so hovering it shows what it means.
 
 ## Check it
 
 Serve `public/` (see README) and look at 320, 375, 736, 1024 and 1440px, and
-sweep 600 to 767px, where the cards switch from one column to two:
+sweep 600 to 767px, where the cards and the projects switch from one column
+to two:
 
 - `document.documentElement.scrollWidth` equals the window width: no
   sideways scroll.
