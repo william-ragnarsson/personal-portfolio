@@ -115,11 +115,27 @@ same link again, centred, as the `<figcaption>`. A caption that is a URL gets a
 </figure>
 ```
 
-`img { max-width: 100%; height: auto }` fits them to the column. Every `<img>`
-also has `width` and `height` set to its file's real size, so the page saves
-its space before it loads, and `loading="lazy"` unless it is in the first
+`img, video { max-width: 100%; height: auto }` fits them to the column. Every
+`<img>` also has `width` and `height` set to its file's real size, so the page
+saves its space before it loads, and `loading="lazy"` unless it is in the first
 screen. Keep images WebP and no wider than 1400px
 (`cwebp -q 80 -resize 1200 0`).
+
+The Jev Events and double pendulum pictures move, so each is a `<video>` in
+place of the `<img>`: `autoplay loop muted playsinline`, no controls, no sound,
+no script. Its `poster` is the still, and its `<source>` has
+`media="(prefers-reduced-motion: no-preference)"`, so anyone who asks for less
+motion gets the still. The alt text goes in `aria-label`.
+
+They are H.264 MP4s, which every browser plays, cut to one cycle so the loop
+doesn't jump (`ffmpeg -c:v libx264 -preset veryslow -pix_fmt yuv420p
+-movflags +faststart -an`):
+
+- **Jev Events**: the landing page's animation, which repeats every 12s. 1200px,
+  `-crf 24`, about 260KB.
+- **Double pendulum**: 6s from the smooth bands into chaos. 640px at 30fps,
+  `-crf 32`, about 1.5MB. Not a GIF or animated WebP: its noise barely
+  compresses, and those came out at 13MB and up.
 
 Jargon gets an `<abbr title="...">`, so hovering it shows what it means.
 
