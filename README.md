@@ -11,6 +11,7 @@ pipes.
 public/
   index.html             the whole site
   images/                one picture per section, WebP, at most 1400px wide
+  videos/                Jev Events and the double pendulum, MP4s that loop in place of their pictures
   favicon.svg, icon.png  the tab icon: a bold Times W in one of the page's boxes
   apple-touch-icon.png   the same, with room around it for the home screen
   og.png                 link preview, 1200x630
@@ -25,6 +26,8 @@ python3 -m http.server 3001 --directory public
 
 Then open http://localhost:3001. Opening `public/index.html` straight from the
 disk also works, except the pictures, whose paths start at the site root.
+Safari won't play the videos from Python's server, which can't send
+part of a file; look at it in Chrome or Firefox, or on the deployed site.
 
 ## Deploy
 
